@@ -1,7 +1,7 @@
 ---
 name: Question
 about: Ask a general question about Epymetheus
-title: "[Question]"
+title: "[Q]"
 labels: question
 assignees: simaki
 
