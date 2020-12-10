@@ -1,10 +1,10 @@
 import pytest
 
-from epymetheus import TradeStrategy, History
+from epymetheus import Strategy, History
 from epymetheus.exceptions import NotRunError
 
 
-class SampleStragegy(TradeStrategy):
+class SampleStragegy(Strategy):
     """
     A sample strategy.
     """
