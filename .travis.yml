@@ -3,18 +3,23 @@ python:
   - 3.6
   - 3.7
   - 3.8
-sudo: false
 install:
-  - echo "install start"
-  - pip install poetry
-  - poetry install
-  - pip install codecov
-  - echo "install end"
+  - echo "--- install start ---"
+  - python3 -m pip install .
+  - python3 -m pip install pytest-cov
+  - echo "--- install end ---"
 script:
-  - echo "script start"
-  - pytest --cov=epymetheus
-  - echo "script end"
+  - echo "--- script start ---"
+  - python3 -m pytest --doctest-modules epymetheus
+  - python3 -m pytest --cov=epymetheus tests
+  - echo "--- script end ---"
 after_success:
-  - sh tests/examples.sh
-  - flake8 epymetheus
-  - codecov
+  - echo "--- after_success start ---"
+  - python3 -m pip install poetry
+  - python3 -m poetry install
+  - python3 -m codecov
+  - python3 -m flake8 epymetheus
+  - python3 -m black --check epymetheus
+  - python3 -m isort --check --force-single-line-imports epymetheus
+  # - sh tests/examples.sh
+  - echo "--- after_success end ---"
