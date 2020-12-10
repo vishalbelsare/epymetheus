@@ -47,5 +47,5 @@ exclude = '''
 '''
 
 [tool.isort]
-profile = black
+profile = "black"
 force_single_line = true
