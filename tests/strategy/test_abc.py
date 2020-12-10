@@ -1,9 +1,9 @@
 import pytest
 
-from epymetheus import TradeStrategy
+from epymetheus import Strategy
 
 
-class StrategyWithoutLogic(TradeStrategy):
+class StrategyWithoutLogic(Strategy):
     """
     Strategy without logic.
     """
@@ -18,10 +18,10 @@ class StrategyWithoutLogic(TradeStrategy):
 class TestABC:
     def test_abc_abstract(self):
         """
-        One cannot instantiate `TradeStrategy` itself.
+        One cannot instantiate `Strategy` itself.
         """
         with pytest.raises(TypeError):
-            TradeStrategy()
+            Strategy()
 
     def test_abc_nologic(self):
         """
