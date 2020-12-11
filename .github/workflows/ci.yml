@@ -44,7 +44,7 @@ jobs:
 
     - name: Doctest
       run: |
-        python3 -m pytest --cov=${PROJECT_NAME} tests
+        python3 -m pytest --doctest-modules ${PROJECT_NAME}
       if: always()
 
     - name: Pytest
