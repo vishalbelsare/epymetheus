@@ -1,7 +1,7 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: test
+
+env:
+  PROJECT_NAME: ${${{ github.repository }}##*/}
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
     - name: Pytest
       run: |
         echo "--- pytest start ---"
-        python3 -m pytest --doctest-modules ${{ github.repository.name }}
+        python3 -m pytest --doctest-modules ${PROJECT_NAME}
         python3 -m pytest --cov=${{ github.repository.name }} tests
         echo "--- pytest end ---"
     - name: CodeCov
@@ -48,7 +48,7 @@ jobs:
       run: |
         echo "--- lint start ---"
         python3 -m pip install flake8 black isort
-        python3 -m flake8 ${{ github.repository.name }}
-        python3 -m black --check ${{ github.repository.name }}
-        python3 -m isort --check --force-single-line-imports ${{ github.repository.name }}
-        echo "--- lint start ---"
+        python3 -m flake8 ${PROJECT_NAME}
+        python3 -m black --check ${PROJECT_NAME}
+        python3 -m isort --check --force-single-line-imports ${PROJECT_NAME}
+        echo "--- lint end ---"
