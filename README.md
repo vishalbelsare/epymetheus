@@ -2,7 +2,7 @@
 
 [![python versions](https://img.shields.io/pypi/pyversions/epymetheus.svg)](https://pypi.org/project/epymetheus/)
 [![version](https://img.shields.io/pypi/v/epymetheus.svg)](https://pypi.org/project/epymetheus/)
-[![build status](https://travis-ci.com/simaki/epymetheus.svg?branch=master)](https://travis-ci.com/simaki/epymetheus)
+[![CI](https://github.com/simaki/epymetheus/workflows/CI/badge.svg)](https://github.com/simaki/epymetheus/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/simaki/epymetheus/branch/master/graph/badge.svg)](https://codecov.io/gh/simaki/epymetheus)
 [![dl](https://img.shields.io/pypi/dm/epymetheus)](https://pypi.org/project/epymetheus/)
 [![LICENSE](https://img.shields.io/github/license/simaki/epymetheus)](LICENSE)
