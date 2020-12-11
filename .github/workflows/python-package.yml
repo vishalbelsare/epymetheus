@@ -36,8 +36,8 @@ jobs:
     - name: Pytest
       run: |
         echo "--- pytest start ---"
-        python3 -m pytest --doctest-modules ${{ github.repository }}
-        python3 -m pytest --cov=${{ github.repository }} tests
+        python3 -m pytest --doctest-modules ${{ github.repository.name }}
+        python3 -m pytest --cov=${{ github.repository.name }} tests
         echo "--- pytest end ---"
     - name: CodeCov
       run: |
@@ -48,7 +48,7 @@ jobs:
       run: |
         echo "--- lint start ---"
         python3 -m pip install flake8 black isort
-        python3 -m flake8 ${{ github.repository }}
-        python3 -m black --check ${{ github.repository }}
-        python3 -m isort --check --force-single-line-imports ${{ github.repository }}
+        python3 -m flake8 ${{ github.repository.name }}
+        python3 -m black --check ${{ github.repository.name }}
+        python3 -m isort --check --force-single-line-imports ${{ github.repository.name }}
         echo "--- lint start ---"
