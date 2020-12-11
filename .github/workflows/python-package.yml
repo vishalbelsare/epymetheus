@@ -1,0 +1,54 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: test
+
+on:
+  push:
+  pull_request:
+      branches:
+      - main
+      - master
+      - release/*
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        echo "--- install start ---"
+        python -m pip install --upgrade pip
+        python -m pip install .
+        python -m pip install pytest pytest-cov codecov
+        echo "--- install end ---"
+    - name: Pytest
+      run: |
+        echo "--- pytest start ---"
+        python3 -m pytest --doctest-modules ${{ github.repository }}
+        python3 -m pytest --cov=${{ github.repository }} tests
+        echo "--- pytest end ---"
+    - name: CodeCov
+      run: |
+        echo "--- codecov start ---"
+        python3 -m codecov
+        echo "--- codecov end ---"
+    - name: Lint
+      run: |
+        echo "--- lint start ---"
+        python3 -m pip install flake8 black isort
+        python3 -m flake8 ${{ github.repository }}
+        python3 -m black --check ${{ github.repository }}
+        python3 -m isort --check --force-single-line-imports ${{ github.repository }}
+        echo "--- lint start ---"
