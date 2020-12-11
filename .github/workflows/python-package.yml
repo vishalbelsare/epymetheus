@@ -1,5 +1,8 @@
 name: test
 
+env:
+  PROJECT_NAME: epymetheus
+
 on:
   push:
   pull_request:
