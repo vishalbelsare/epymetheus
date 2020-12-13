@@ -259,4 +259,6 @@ class Strategy(metaclass=ABCMeta):
         return metric.result(self)
 
     def evaluate(self, metric):
-        raise DeprecationWarning("Strategy.evaluate(...) is deprecated. Use Strategy.score(...) instead.")
+        raise DeprecationWarning(
+            "Strategy.evaluate(...) is deprecated. Use Strategy.score(...) instead."
+        )
