@@ -17,17 +17,15 @@ It provides an end-to-end framework that lets analysts build and try out their t
 
 ### Features
 
-1. **Simple and Intuitive API**: The API is minimally organized so that you can focus on your idea. Trade `Strategy` can be readily coded and its backtesting is consistently carried out by its methods `run()` and `evaluate()`.
-2. **Seamless connection to [Pandas](https://github.com/pandas-dev/pandas)**: You can just put in pandas DataFrame as an input historical data. Backtesting results can be quickly converted to Pandas format so that you can view, analyze and plot results by the familiar Pandas methods.
-3. **Extensibility with Other Frameworks**: Epymetheus only provides a framework. Strategy can be readily built with other libraries for machine learning, econometrics, technical indicators, derivative pricing models and so forth.
-4. **Efficient Computation**: Backtesting engine is boosted by NumPy. You can give your own idea a quick try.
+1. **Simple and Intuitive API**: The API is simply and intuitively designed so that you can focus on your idea. Trade strategy is readily coded as a usual function, and then you can `run()` and `score()` it right away.
+2. **Seamless connection to [Pandas](https://github.com/pandas-dev/pandas)**: You can just use `pandas.DataFrame` of historical prices as the target of backtesting. Backtesting results can be quickly converted to `pandas.DataFrame` so that you can view, analyze and plot results by the familiar Pandas methods.
+3. **Extensibility with Other Frameworks**: Epymetheus only provides a framework.  Strategy can be readily built with other libraries for machine learning, econometrics, technical indicators, hyper-parameter optimization framework and so forth.
+4. **Efficient Computation**: Backtesting engine is boosted by NumPy.  You can give your own idea a quick try.
 5. **Full Test Coverage**: Epymetheus is thoroughly tested with 100% test coverage for multiple Python versions.
 
 ### Integrations
 
-Strategies is integrated with:
-
-- **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [TensorFlow](https://github.com/tensorflow/tensorflow), [PyTorch](https://github.com/pytorch/pytorch), etc.
+- **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [PyTorch](https://github.com/pytorch/pytorch), [TensorFlow](https://github.com/tensorflow/tensorflow), etc.
 - **Econometrics**: [statsmodels](https://github.com/statsmodels/statsmodels), etc.
 - **Technical Indicators**: [TA-Lib](https://github.com/mrjbq7/ta-lib), etc.
 - **Hyperparameter Optimization**: [optuna](https://github.com/optuna/optuna). Example follows.
@@ -200,6 +198,6 @@ Profit-take and/or stop-loss will be executed when the total profit/loss exceeds
 ```python
 def pair_trading(universe, param_1, ...):
     ...
-    # Buy 1 share of "BULLISH_STOCK" and sell 2 share of "BULLISH_STOCK".
+    # Buy 1 share of "BULLISH_STOCK" and sell 2 share of "BEARISH_STOCK".
     yield [1.0, -2.0] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
 ```
