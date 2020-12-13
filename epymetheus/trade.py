@@ -495,6 +495,19 @@ class Trade:
             stop_bar = universe.bars[-1]
         return stop_bar
 
+    def __eq__(self, other):
+        attrs = (
+            "asset",
+            "lot",
+            "open_bar",
+            "shut_bar",
+            "take",
+            "stop",
+        )
+        return all(
+            getattr(self, attr, None) == getattr(other, attr, None) for attr in attrs
+        )
+
     def __mul__(self, num):
         return self.__rmul__(num)
 
