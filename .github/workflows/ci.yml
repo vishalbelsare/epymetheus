@@ -41,7 +41,7 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install .
 
-    - name: Install Pytest
+    - name: Install pytest
       run: |
         python3 -m pip install pytest pytest-cov codecov
 
