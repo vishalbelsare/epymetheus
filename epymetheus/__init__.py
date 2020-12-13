@@ -8,4 +8,6 @@ from epymetheus.trade import trade
 from epymetheus.universe import Universe
 from epymetheus.wealth import Wealth
 
+from . import datasets
+
 from . import utils
