@@ -244,7 +244,7 @@ class Strategy(metaclass=ABCMeta):
 
         return self
 
-    def evaluate(self, metric):
+    def score(self, metric):
         """
         Returns the value of a metric of self.
 
@@ -255,4 +255,8 @@ class Strategy(metaclass=ABCMeta):
         """
         if not self.is_run:
             raise NotRunError("Strategy has not been run")
+
         return metric.result(self)
+
+    def evaluate(self, metric):
+        raise DeprecationWarning("Strategy.evaluate(...) is deprecated. Use Strategy.score(...) instead.")

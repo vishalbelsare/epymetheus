@@ -3,20 +3,40 @@ import pytest
 import numpy as np
 import pandas as pd
 
+import epymetheus as ep
 from epymetheus import Trade, Universe
 from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import RandomTrader
 
-# TODO after execution
 
-# params_seed = [42, 1, 2, 3]
-# params_n_bars = [10, 100, 1000]
-# params_const = [-10, 0, 10]
+class TestInit:
+    """
+    Test initialization by function `trade`.
+    """
+    def test_shape(self):
+        trade = ep.trade("A", lot=1.0)
+        assert trade.asset.shape == (1,)
+        assert trade.lot.shape == (1,)
 
+        trade = ep.trade(["A"], lot=1.0)
+        assert trade.asset.shape == (1,)
+        assert trade.lot.shape == (1,)
 
-# def make_random_trade(universe, seed):
-#     random_trader = RandomTrader(n_trades=1, seed=seed).run(universe)
-#     return random_trader.trades[0]
+        trade = ep.trade("A", lot=[1.0])
+        assert trade.asset.shape == (1,)
+        assert trade.lot.shape == (1,)
+
+        trade = ep.trade(["A", "B"], lot=1.0)
+        assert trade.asset.shape == (2,)
+        assert trade.lot.shape == (2,)
+
+        trade = ep.trade(["A", "B"], lot=[1.0])
+        assert trade.asset.shape == (2,)
+        assert trade.lot.shape == (2,)
+
+        trade = ep.trade(["A", "B"], lot=[1.0, 2.0])
+        assert trade.asset.shape == (2,)
+        assert trade.lot.shape == (2,)
 
 
 class TestExecute:
@@ -30,7 +50,10 @@ class TestArrayValue:
 
     universe_hand = Universe(
         pd.DataFrame(
-            {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 2, 8, 1],
+            },
             index=range(7),
             dtype=float,
         )
@@ -41,7 +64,8 @@ class TestArrayValue:
     expected1 = [[-6, 6], [-21, 2], [-3, 8], [-24, 2], [-6, 10], [-24, 18], [-3, 4]]
 
     @pytest.mark.parametrize(
-        "trade, expected", [(trade0, expected0), (trade1, expected1)],
+        "trade, expected",
+        [(trade0, expected0), (trade1, expected1)],
     )
     def test_value_hand(self, trade, expected):
         result = trade._array_value(universe=self.universe_hand)
@@ -83,7 +107,10 @@ class TestArrayExposure:
 
     universe_hand = Universe(
         pd.DataFrame(
-            {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 2, 8, 1],
+            },
             index=range(7),
             dtype=float,
         )
@@ -95,7 +122,8 @@ class TestArrayExposure:
     expected1 = [[0, 0], [-21, 2], [-3, 8], [-24, 2], [0, 0], [0, 0], [0, 0]]
 
     @pytest.mark.parametrize(
-        "trade, expected", [(trade0, expected0), (trade1, expected1)],
+        "trade, expected",
+        [(trade0, expected0), (trade1, expected1)],
     )
     def test_hand(self, trade, expected):
         result = trade.array_exposure(universe=self.universe_hand)
@@ -137,7 +165,10 @@ class TestSeriesExposure:
 
     universe_hand = Universe(
         pd.DataFrame(
-            {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 2, 8, 1],
+            },
             index=range(7),
             dtype=float,
         )
@@ -204,7 +235,10 @@ class TestSeriesPnl:
 
     universe_hand = Universe(
         pd.DataFrame(
-            {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 2, 8, 1],
+            },
             index=range(7),
             dtype=float,
         )
@@ -249,7 +283,10 @@ class TestSeriesPnl:
 class TestFinalPnl:
     universe_hand = Universe(
         pd.DataFrame(
-            {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 2, 8, 1],
+            },
             index=range(7),
             dtype=float,
         )
@@ -280,29 +317,16 @@ class TestRepr:
     Test `Trade.__repr__`.
     """
 
-    def test_value_0(self):
-        asset = "A0"
-        open_bar = "B0"
-        shut_bar = "B1"
-        lot = 1.0
-        take = 2.0
-        stop = -2.0
-        trade = Trade(
-            asset=asset,
-            open_bar=open_bar,
-            shut_bar=shut_bar,
-            lot=lot,
-            take=take,
-            stop=stop,
-        )
-        expected = "Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=1.0, take=2.0, stop=-2.0)"
-        assert repr(trade) == expected
+    def test_repr(self):
+        trade = ep.trade("A")
+        assert repr(trade) == "trade(['A'], lot=[1.])"
 
-    def test_value_1(self):
-        asset = "A0"
-        trade = Trade(asset=asset)
-        expected = "Trade(asset='A0', lot=1.0)"  # default value of lot = 1.0
-        assert repr(trade) == expected
+        trade = ep.trade("A", lot=2, take=3.0, stop=-3.0, open_bar="B0", shut_bar="B1")
+
+        assert (
+            repr(trade)
+            == "trade(['A'], lot=[2], open_bar=B0, shut_bar=B1, take=3.0, stop=-3.0)"
+        )
 
 
 # @pytest.mark.parametrize("seed", params_seed)
