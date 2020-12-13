@@ -1,5 +1,4 @@
-from abc import ABCMeta
-from abc import abstractmethod
+import abc
 from inspect import cleandoc
 from time import time
 
@@ -9,7 +8,7 @@ from epymetheus.history import History
 from epymetheus.wealth import Wealth
 
 
-class Strategy(metaclass=ABCMeta):
+class Strategy(abc.ABC):
     """
     Represents a strategy to trade.
 
@@ -68,7 +67,7 @@ class Strategy(metaclass=ABCMeta):
     def __init__(self):
         """Initialize self."""
 
-    @abstractmethod
+    @abc.abstractmethod
     def logic(self, universe):
         """
         Logic to generate `Trade` from `Universe`.
@@ -138,7 +137,7 @@ class Strategy(metaclass=ABCMeta):
 
     @property
     def n_orders(self):
-        return sum(trade.n_orders for trade in self.trades)
+        return sum(t.n_orders for t in self.trades)
 
     @property
     def history(self):
@@ -206,16 +205,16 @@ class Strategy(metaclass=ABCMeta):
         def iter_trades(verbose):
             if verbose:
                 begin_time = time()
-                for i, trade in enumerate(self.logic(universe) or []):
+                for i, t in enumerate(self.logic(universe) or []):
                     print(
-                        f"\rGenerating {i + 1} trades " f"({trade.open_bar}) ... ",
+                        f"\rGenerating {i + 1} trades " f"({t.open_bar}) ... ",
                         end="",
                     )
-                    yield trade
+                    yield t
                 print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
             else:
-                for trade in self.logic(universe) or []:
-                    yield trade
+                for t in self.logic(universe) or []:
+                    yield t
 
         self.trades = list(iter_trades(verbose))
 
@@ -234,13 +233,13 @@ class Strategy(metaclass=ABCMeta):
         """
         if verbose:
             begin_time = time()
-            for i, trade in enumerate(self.trades):
+            for i, t in enumerate(self.trades):
                 print(f"\rExecuting {i + 1} trades ... ", end="")
-                trade.execute(universe)
+                t.execute(universe)
             print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
         else:
-            for trade in self.trades:
-                trade.execute(universe)
+            for t in self.trades:
+                t.execute(universe)
 
         return self
 
