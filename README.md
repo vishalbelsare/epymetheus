@@ -102,7 +102,7 @@ universe.prices
 # 2000-01-05   0.794528   36.227283    69.750000   53200   25.324482   26.264877   42.801613  13.333860   29.464787  21.609318
 ```
 
-```
+```python
 my_strategy.run(universe)
 # Yield 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.12 sec)
 # Execute 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.03 sec)
