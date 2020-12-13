@@ -22,8 +22,8 @@ class DeterminedTrader(Strategy):
         self.trades = trades
 
     def logic(self, universe):
-        for trade in self.trades:
-            yield trade
+        for t in self.trades:
+            yield t
 
 
 class RandomTrader(Strategy):
@@ -72,7 +72,7 @@ class RandomTrader(Strategy):
             ) - self.min_lot
             open_bar, shut_bar = sorted(random.sample(list(universe.bars), 2))
 
-            yield lot * trade(asset, open_bar=open_bar, shut_bar=shut_bar)
+            yield trade(asset, lot=lot, open_bar=open_bar, shut_bar=shut_bar)
 
 
 class BuyAndHold(Strategy):
@@ -95,4 +95,4 @@ class BuyAndHold(Strategy):
             np.array(list(self.weight.values()))
             / universe.prices.loc[:, self.weight.keys()].iloc[0, :].values
         )
-        yield lot * trade(asset, open_bar=universe.bars[0])
+        yield trade(asset, lot=lot, open_bar=universe.bars[0])
