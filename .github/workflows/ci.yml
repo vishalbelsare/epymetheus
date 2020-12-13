@@ -45,19 +45,18 @@ jobs:
       run: |
         python3 -m pip install pytest pytest-cov codecov
 
-    - name: Doctest
+    - name: Run doctest
       run: |
         python3 -m pytest --doctest-modules ${PROJECT_NAME}
       if: always()
 
-    - name: Pytest
+    - name: Run pytest
       run: |
         python3 -m pytest --cov=${PROJECT_NAME} tests
       if: always()
 
-    - name: CodeCov
+    - name: Upload codecov report
       run: |
-        python3 -m pip install 
         python3 -m codecov
 
   Lint:
@@ -79,22 +78,23 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Linters
+    - name: Install linter
       run: |
+        python3 -m pip install --upgrade pip
         python3 -m pip install flake8 black isort
       if: always()
 
-    - name: Flake8
+    - name: Run flake8
       run: |
         python3 -m flake8 ${PROJECT_NAME}
       if: always()
 
-    - name: Black
+    - name: Run black
       run: |
         python3 -m black --check ${PROJECT_NAME}
       if: always()
 
-    - name: Isort
+    - name: Run isort
       run: |
         python3 -m isort --check --force-single-line-imports ${PROJECT_NAME}
       if: always()
