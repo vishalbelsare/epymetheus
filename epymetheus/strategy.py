@@ -215,13 +215,39 @@ class Strategy(abc.ABC):
         return self
 
     def get_params(self):
-        return getattr(self, "params")
+        """
+        Set the parameters of this strategy.
 
-    def set_params(self, params):
-        if hasattr(self, "params"):
-            self.params = params
-        else:
-            raise AttributeError
+        Returns
+        -------
+        params : dict[str, *]
+            Parameters.
+        """
+        return getattr(self, "params", {})
+
+    def set_params(self, **params):
+        """
+        Set the parameters of this strategy.
+
+        Parameters
+        ----------
+        - **params : dict
+            Strategy parameters.
+
+        Returns
+        -------
+        self : Strategy
+            Strategy with new parameters.
+        """
+        valid_keys = self.get_params().keys()
+
+        for key, value in params.items():
+            if key not in valid_keys:
+                raise ValueError(f"Invalid parameter: {key}")
+            else:
+                self.params[key] = value
+
+        return self
 
     def __compile(self, metrics, budget):
         self.metrics = metrics
