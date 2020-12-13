@@ -8,12 +8,41 @@ from epymetheus.history import History
 from epymetheus.wealth import Wealth
 
 
+def create_strategy(logic_func, **params):
+    """
+    Initialize `Strategy` from function.
+
+    Parameters
+    ----------
+    - logic_func : callable
+        Function that returns iterable from universe and parameters.
+    - **params
+        Parameter values.
+
+    Examples
+    --------
+    >>> from epymetheus import trade
+    ...
+    >>> def logic_func(universe, my_param):
+    ...     return [my_param * trade("A")]
+    ...
+    >>> strategy = create_strategy(logic_func, my_param=2.0)
+    >>> universe = None
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
+    """
+    return Strategy._create_strategy(logic_func=logic_func, params=params)
+
+
 class Strategy(abc.ABC):
     """
     Represents a strategy to trade.
 
     Parameters
     ----------
+    - logic : callable
+    -
+
     - name : str, optional
         Name of the strategy.
     - description : str, optional
@@ -35,7 +64,7 @@ class Strategy(abc.ABC):
     Examples
     --------
     Define strategy by subclassing:
-    >>> from epymetheus import Trade
+    >>> from epymetheus import trade
     >>> class MyStrategy(Strategy):
     ...     '''
     ...     This is my favorite strategy.
@@ -45,7 +74,7 @@ class Strategy(abc.ABC):
     ...
     ...     def logic(self, universe):
     ...         ...
-    ...         yield Trade(...)
+    ...         yield trade(...)
 
     Initialize:
     >>> my_strategy = MyStrategy(my_parameter=0.1)
@@ -64,10 +93,34 @@ class Strategy(abc.ABC):
     - dump trades in a light data structure
     """
 
-    def __init__(self):
-        """Initialize self."""
+    def __init__(self, logic_func=None, name=None, description=None, params=None):
+        """
+        Initialize self.
+        """
+        if logic_func is not None:
+            self.logic_func = logic_func
+            self.params = params or {}
 
-    @abc.abstractmethod
+    @classmethod
+    def _create_strategy(cls, logic_func, params):
+        """
+        Create strategy from logic function.
+
+        Parameters
+        ----------
+        - logic_func : callable
+        - params : dict
+
+        Returns
+        -------
+        strategy : Strategy
+        """
+        return cls(logic_func=logic_func, params=params)
+
+    def __call__(self, universe):
+        logic = getattr(self, "logic_func", self.logic)
+        return list(logic(universe, **getattr(self, "params", {})))
+
     def logic(self, universe):
         """
         Logic to generate `Trade` from `Universe`.
@@ -102,29 +155,6 @@ class Strategy(abc.ABC):
         else:
             description = cleandoc(self.__class__.__doc__)
         return description
-
-    # @property
-    # def params(self):
-    #     """
-    #     Return parameters of self as `dict`.
-
-    #     Returns
-    #     -------
-    #     parameters : dict
-    #         Names and values of parameters.
-
-    #     Examples
-    #     --------
-    #     >>> class MyStrategy:
-    #     ...     def __init__(self, param1, param2):
-    #     ...         self.param1 = param1
-    #     ...         self.param2 = param2
-    #     ...
-    #     >>> my_strategy = MyStrategy(param1=1.2, param2=3.4)
-    #     >>> my_strategy.params
-    #     {'param1': 1.2, 'param2': 3.4}
-    #     """
-    #     return self.__dict__
 
     @property
     def is_run(self):
@@ -183,6 +213,15 @@ class Strategy(abc.ABC):
             print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
 
         return self
+
+    def get_params(self):
+        return getattr(self, "params")
+
+    def set_params(self, params):
+        if hasattr(self, "params"):
+            self.params = params
+        else:
+            raise AttributeError
 
     def __compile(self, metrics, budget):
         self.metrics = metrics
