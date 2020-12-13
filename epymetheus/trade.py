@@ -34,9 +34,6 @@ def trade(
     >>> t
     trade(['AAPL' 'AMZN'], lot=[1. 2.])
     """
-    asset = np.array(asset).reshape(-1)
-    lot = np.broadcast_to(np.array(lot), asset.shape)
-
     return Trade.trade(
         asset=asset,
         lot=lot,
@@ -150,8 +147,8 @@ class Trade:
         >>> t
         trade(['AAPL' 'AMZN'], lot=[1. 2.])
         """
-        asset = np.array(asset).reshape(-1)
-        lot = np.broadcast_to(np.array(lot), asset.shape)
+        asset = np.asarray(asset).reshape(-1)
+        lot = np.broadcast_to(np.asarray(lot), asset.shape)
 
         return cls(
             asset=asset,
@@ -186,7 +183,7 @@ class Trade:
         >>> trade.array_asset
         array(['AAPL', 'MSFT'], dtype='<U4')
         """
-        return np.array(self.asset).reshape(-1)
+        return np.asarray(self.asset).reshape(-1)
 
     @property
     def array_lot(self):
@@ -206,7 +203,7 @@ class Trade:
         >>> trade.array_lot
         array([0.2, 0.4])
         """
-        return np.array(self.lot).reshape(-1)
+        return np.asarray(self.lot).reshape(-1)
 
     @property
     def n_orders(self):
@@ -513,21 +510,7 @@ class Trade:
         return stop_bar
 
     def __mul__(self, num):
-        """
-        Multiply lot of self.
-
-        Examples
-        --------
-        >>> trade = (-2.0) * Trade(asset="A0", lot=0.2)
-        >>> trade.lot
-        array([-0.4])
-        >>> trade = (-2.0) * Trade(asset=["A0", "A1"], lot=[0.2, 0.4])
-        >>> trade.lot
-        array([-0.4, -0.8])
-        """
-        self_copy = deepcopy(self)
-        self_copy.lot = num * self_copy.array_lot
-        return self_copy
+        return self.__rmul__(num)
 
     def __rmul__(self, num):
         """
@@ -535,14 +518,21 @@ class Trade:
 
         Examples
         --------
-        >>> trade = Trade(asset="A0", lot=0.2) * (-2.0)
-        >>> trade.lot
-        array([-0.4])
-        >>> trade = Trade(asset=["A0", "A1"], lot=[0.2, 0.4]) * (-2.0)
-        >>> trade.lot
-        array([-0.4, -0.8])
+        >>> trade("AMZN")
+        trade(['AMZN'], lot=[1.])
+        >>> (-2.0) * trade("AMZN")
+        trade(['AMZN'], lot=[-2.])
+
+        >>> trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[1. 1.])
+        >>> (-2.0) * trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[-2. -2.])
+        >>> [2.0, 3.0] * trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[2. 3.])
         """
-        return self.__mul__(num)
+        t = deepcopy(self)
+        t.lot = t.lot * np.asarray(num)
+        return t
 
     def __neg__(self):
         """
@@ -550,14 +540,10 @@ class Trade:
 
         Examples
         --------
-        >>> trade = -Trade(asset="A0", lot=0.2)
-        >>> trade.lot
-        array([-0.2])
-        >>> trade = -Trade(asset=["A0", "A1"], lot=[0.2, 0.4])
-        >>> trade.lot
-        array([-0.2, -0.4])
+        >>> -trade("AMZN")
+        trade(['AMZN'], lot=[-1.])
         """
-        return self.__mul__(-1.0)
+        return (-1.0) * self
 
     def __truediv__(self, num):
         """
@@ -565,12 +551,11 @@ class Trade:
 
         Examples
         --------
-        >>> trade = Trade(asset="A0", lot=0.2) / 2.0
-        >>> trade.lot
-        array([0.1])
-        >>> trade = Trade(asset=["A0", "A1"], lot=[0.2, 0.4]) / 2.0
-        >>> trade.lot
-        array([0.1, 0.2])
+        >>> trade("AMZN", lot=2.0) / 2.0
+        trade(['AMZN'], lot=[1.])
+
+        >>> trade(["AMZN", "AAPL"], lot=[2.0, 4.0]) / 2.0
+        trade(['AMZN' 'AAPL'], lot=[1. 2.])
         """
         return self.__mul__(1.0 / num)
 
