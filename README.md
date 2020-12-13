@@ -23,13 +23,6 @@ It provides an end-to-end framework that lets analysts build and try out their t
 4. **Efficient Computation**: Backtesting engine is boosted by NumPy. You can give your own idea a quick try.
 5. **Full Test Coverage**: Epymetheus is thoroughly tested with 100% test coverage for multiple Python versions.
 
-### Modules
-
-1. **[Strategy](https://github.com/simaki/epymetheus/tree/master/epymetheus/strategy)**: A strategy encodes your own trading rules. The [`benchmarks`](https://github.com/simaki/epymetheus/tree/master/epymetheus/benchmarks) provide standard strategies to be compared with.
-2. **[Universe](https://github.com/simaki/epymetheus/tree/master/epymetheus/universe)**: A universe stores historical prices of a set of securities. The [`datasets`](https://github.com/simaki/epymetheus/tree/master/epymetheus/datasets) provide sample universe like Brownian stock prices and blue chips in the US.
-3. **[History](https://github.com/simaki/epymetheus/tree/master/epymetheus/history)**: A history stores the assets, lots, profit/loss of each trade yielded. Easily converted into Pandas DataFrame.
-4. **[Metric](https://github.com/simaki/epymetheus/tree/master/epymetheus/metric)**: A metric is a function to assess the performance of your strategy. Available metrics include: final wealth, maximum drawdown, Sharpe ratio and so forth.
-
 ### Integrations
 
 Strategies may be integrated with:
@@ -37,11 +30,7 @@ Strategies may be integrated with:
 - **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [TensorFlow](https://github.com/tensorflow/tensorflow), [PyTorch](https://github.com/pytorch/pytorch), etc.
 - **Econometrics**: [statsmodels](https://github.com/statsmodels/statsmodels), etc.
 - **Technical Indicators**: [TA-Lib](https://github.com/mrjbq7/ta-lib), etc.
-- **Hyperparameter Optimization**: [optuna](https://github.com/optuna/optuna) ([Example](examples/examples/hypara.py))
-
-### Examples
-
-Example codes are provided [here](https://github.com/simaki/epymetheus/tree/master/examples).
+- **Hyperparameter Optimization**: [optuna](https://github.com/optuna/optuna). Example follows.
 
 ## Installation
 
