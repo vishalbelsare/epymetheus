@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from epymetheus import Strategy
-from epymetheus import Trade
+from epymetheus import trade
 
 # TODO: BuyAndHold rebalance
 
@@ -72,7 +72,7 @@ class RandomTrader(Strategy):
             ) - self.min_lot
             open_bar, shut_bar = sorted(random.sample(list(universe.bars), 2))
 
-            yield Trade(asset=asset, lot=lot, open_bar=open_bar, shut_bar=shut_bar)
+            yield lot * trade(asset, open_bar=open_bar, shut_bar=shut_bar)
 
 
 class BuyAndHold(Strategy):
@@ -95,4 +95,4 @@ class BuyAndHold(Strategy):
             np.array(list(self.weight.values()))
             / universe.prices.loc[:, self.weight.keys()].iloc[0, :].values
         )
-        yield Trade(asset=asset, lot=lot, open_bar=universe.bars[0])
+        yield lot * trade(asset, open_bar=universe.bars[0])

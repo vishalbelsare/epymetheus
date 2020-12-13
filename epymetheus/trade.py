@@ -132,20 +132,6 @@ class Trade:
         Returns
         -------
         trade : Trade
-
-        Examples
-        --------
-        >>> t = Trade.trade("AAPL")
-        >>> t
-        trade(['AAPL'], lot=[1.])
-
-        >>> t = Trade.trade(["AAPL", "AMZN"])
-        >>> t
-        trade(['AAPL' 'AMZN'], lot=[1. 1.])
-
-        >>> t = Trade.trade(["AAPL", "AMZN"], lot=[1.0, 2.0])
-        >>> t
-        trade(['AAPL' 'AMZN'], lot=[1. 2.])
         """
         asset = np.asarray(asset).reshape(-1)
         lot = np.broadcast_to(np.asarray(lot), asset.shape)
