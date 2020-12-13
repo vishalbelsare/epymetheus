@@ -25,7 +25,7 @@ It provides an end-to-end framework that lets analysts build and try out their t
 
 ### Integrations
 
-Strategies may be integrated with:
+Strategies is integrated with:
 
 - **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [TensorFlow](https://github.com/tensorflow/tensorflow), [PyTorch](https://github.com/pytorch/pytorch), etc.
 - **Econometrics**: [statsmodels](https://github.com/statsmodels/statsmodels), etc.
@@ -44,65 +44,52 @@ $ pip install epymetheus
 
 ### Create strategy
 
-Let's construct your own strategy.
+Let's construct your own strategy.  This strategy will:
+
+* buy the cheapest stock with your monthly allowance $100.0.
+* take profit if it exceeds $10.0 and make stop-loss order if the loss exceeds -$10.0.
 
 ```python
 import epymetheus as ep
 
 
 def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
-    """
-    Buy the cheapest stock every month with my allowance.
-
-    Parameters
-    ----------
-    - profit_take : float, default None
-        Threshold (in unit of USD) to make profit-take order.
-    - stop_loss : float, default None
-        Threshold (in unit of USD) to make stop-loss order.
-
-    Yields
-    ------
-    trade : ep.trade
-        Trade object.
-    """
     # I get allowance on the first business day of each month
     allowance = 100.0
-    allowance_dates = pd.date_range(
-        universe.prices.index[0], universe.prices.index[-1], freq="BMS"
-    )
-
+    allowance_dates = pd.date_range(universe.prices.index[0], universe.prices.index[-1], freq="BMS")
+    
+    trades = []
     for date in allowance_dates:
-        # Find the cheapest stock
         cheapest_stock = universe.prices.loc[date].idxmin()
 
         # Find the maximum number of shares that I can buy with my allowance
         n_shares = allowance // universe.prices.at[date, cheapest_stock]
 
-        # Trade!
         trade = n_shares * ep.trade(
             cheapest_stock,
             open_bar=date,
             take=profit_take,
             stop=stop_loss,
         )
-        yield trade
+        trades.append(trade)
+        
+    return trades
 ```
 
-Here the first parameter `universe` is mandatory and means the target of trading (US stocks, JP stocks, set of cryptocurrencies, etc).
-The second parameter, `allowance`, parametrizes your strategy.
+Here,
 
-Profit-taking ($10) and Stop-loss (-$10).
+* The first parameter `universe` is mandatory. It means a set of assets that you will trade (US stocks, cryptocurrencies, etc).
+* The following parameters, `profit_take` and `stop_loss` parametrize your strategy.
 
-You can create your strategy with the specific value of `allowance` as follows.
+You can create your strategy as:
 
 ```python
-my_strategy = ep.create_strategy(dumb_strategy, allowance=100.0)
+my_strategy = ep.create_strategy(dumb_strategy, profit_take=20.0, stop_loss=-10.0)
 ```
 
 ### Run strategy
 
-Now your strategy can readily be backtested with any `Universe`.
+Now your strategy is readily backtested with any `Universe`.
 
 ```python
 from epymetheus.datasets import fetch_usstocks
@@ -124,19 +111,21 @@ my_strategy.run(universe)
 
 ### Trade history and wealth
 
+Trade history can be viewed as:
+
 ```python
 df_history = my_strategy.history.to_dataframe()
 df_history.head()
-#           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop          pnl
-# order_id
-# 0                0  AAPL  116.0 2000-01-03 2019-12-31     None  None  None  8275.172683
-# 1                1  AAPL  130.0 2000-02-01 2019-12-31     None  None  None  9285.507999
-# 2                2  AAPL  100.0 2000-03-01 2019-12-31     None  None  None  7119.731641
-# 3                3  AAPL   98.0 2000-04-03 2019-12-31     None  None  None  6975.090952
-# 4                4  AAPL  105.0 2000-05-01 2019-12-31     None  None  None  7480.531225
+#           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop        pnl
+# order_id                                                                             
+# 0                0  AAPL  116.0 2000-01-03 2000-01-06     None  20.0 -10.0 -15.010098
+# 1                1  AAPL  130.0 2000-02-01 2000-03-01     None  20.0 -10.0  29.856866
+# 2                2  AAPL  100.0 2000-03-01 2000-03-14     None  20.0 -10.0 -12.271219
+# 3                3  AAPL   98.0 2000-04-03 2000-04-11     None  20.0 -10.0 -10.388053
+# 4                4  AAPL  105.0 2000-05-01 2000-05-04     None  20.0 -10.0 -10.929523
 ```
 
-Wealth.
+The time-series of wealth can be viewed as:
 
 ```python
 df_wealth = my_strategy.wealth.to_dataframe()
@@ -154,9 +143,7 @@ df_wealth.head()
 
 ### Scores
 
-You can also quickly `score` metrics of the perfornance.
-
-For example, drawdown, exposure and Sharpe ratio are given by:
+You can also quickly `score` the metrics of the perfornance.
 
 ```python
 from epymetheus.metrics import Drawdown
@@ -177,6 +164,7 @@ sharpe_ratio = my_strategy.score(SharpeRatio())
 
 ### Optimization
 
+You may optimize the parameter of your strategy using, for example, optuna.
 (Remember that optimization for backtesting is dangerous.)
 
 ```python
@@ -206,10 +194,12 @@ study.best_params
 
 ### Pair trading
 
+Trade can include multiple stocks.
+Profit-take and/or stop-loss will be executed when the total profit/loss exceeds the thresholds.
+
 ```python
 def pair_trading(universe, param_1, ...):
     ...
     # Buy 1 share of "BULLISH_STOCK" and sell 2 share of "BULLISH_STOCK".
-    # Stop-loss is executed when the total loss exceeds -100.0.
     yield [1.0, -2.0] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
 ```
