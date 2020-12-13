@@ -184,6 +184,8 @@ sharpe_ratio = my_strategy.score(SharpeRatio())
 ![drawdown](examples/readme/drawdown.png)
 ![net_exposure](examples/readme/net_exposure.png)
 
+## More examples
+
 ### Optimization
 
 (Remember that optimization for backtesting is dangerous.)
@@ -195,6 +197,7 @@ import optuna
 def objective(trial):
     profit_take = trial.suggest_int("profit_take", 10, 100)
     stop_loss = trial.suggest_int("stop_loss", -100, -10)
+    
     my_strategy = ep.create_strategy(
         dumb_strategy,
         profit_take=profit_take,
@@ -210,4 +213,14 @@ study.optimize(objective, n_trials=100)
 
 study.best_params
 # {'profit_take': 100, 'stop_loss': -83}
+```
+
+### Pair trading
+
+```python
+def pair_trading(universe, param_1, ...):
+    ...
+    # Buy 1 share of "BULLISH_STOCK" and sell 2 share of "BULLISH_STOCK".
+    # Stop-loss is executed when the total loss exceeds -100.0.
+    yield [1.0, -2.0] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
 ```
