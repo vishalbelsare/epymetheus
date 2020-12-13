@@ -43,8 +43,7 @@ jobs:
 
     - name: Install Pytest
       run: |
-        python3 -m pip install pytest
-        python3 -m pip install pytest-cov
+        python3 -m pip install pytest pytest-cov codecov
 
     - name: Doctest
       run: |
@@ -58,9 +57,28 @@ jobs:
 
     - name: CodeCov
       run: |
-        python3 -m pip install codecov
+        python3 -m pip install 
         python3 -m codecov
+
+  Lint:
+    name: Lint
+
+    runs-on: ubuntu-latest
     
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - name: Install Linters
       run: |
         python3 -m pip install flake8 black isort
