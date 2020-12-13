@@ -8,7 +8,7 @@
 [![LICENSE](https://img.shields.io/github/license/simaki/epymetheus)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-![wealth](examples/howto/wealth.png)
+![wealth](examples/readme/wealth.png)
 
 ## Introduction
 
@@ -17,31 +17,18 @@ It provides an end-to-end framework that lets analysts build and try out their t
 
 ### Features
 
-1. **Simple and Intuitive API**: The API is minimally organized so that you can focus on your idea. Trade `Strategy` can be readily coded and its backtesting is consistently carried out by its methods `run()` and `evaluate()`.
-2. **Seamless connection to [Pandas](https://github.com/pandas-dev/pandas)**: You can just put in pandas DataFrame as an input historical data. Backtesting results can be quickly converted to Pandas format so that you can view, analyze and plot results by the familiar Pandas methods.
-3. **Extensibility with Other Frameworks**: Epymetheus only provides a framework. Strategy can be readily built with other libraries for machine learning, econometrics, technical indicators, derivative pricing models and so forth.
-4. **Efficient Computation**: Backtesting engine is boosted by NumPy. You can give your own idea a quick try.
+1. **Simple and Intuitive API**: The API is simply and intuitively designed so that you can focus on your idea. Trade strategy is readily coded as a usual function, and then you can `run()` and `score()` it right away.
+2. **Seamless connection to [Pandas](https://github.com/pandas-dev/pandas)**: You can just use `pandas.DataFrame` of historical prices as the target of backtesting. Backtesting results can be quickly converted to `pandas.DataFrame` so that you can view, analyze and plot results by the familiar Pandas methods.
+3. **Extensibility with Other Frameworks**: Epymetheus only provides a framework.  Strategy can be readily built with other libraries for machine learning, econometrics, technical indicators, hyper-parameter optimization framework and so forth.
+4. **Efficient Computation**: Backtesting engine is boosted by NumPy.  You can give your own idea a quick try.
 5. **Full Test Coverage**: Epymetheus is thoroughly tested with 100% test coverage for multiple Python versions.
-
-### Modules
-
-1. **[Strategy](https://github.com/simaki/epymetheus/tree/master/epymetheus/strategy)**: A strategy encodes your own trading rules. The [`benchmarks`](https://github.com/simaki/epymetheus/tree/master/epymetheus/benchmarks) provide standard strategies to be compared with.
-2. **[Universe](https://github.com/simaki/epymetheus/tree/master/epymetheus/universe)**: A universe stores historical prices of a set of securities. The [`datasets`](https://github.com/simaki/epymetheus/tree/master/epymetheus/datasets) provide sample universe like Brownian stock prices and blue chips in the US.
-3. **[History](https://github.com/simaki/epymetheus/tree/master/epymetheus/history)**: A history stores the assets, lots, profit/loss of each trade yielded. Easily converted into Pandas DataFrame.
-4. **[Metric](https://github.com/simaki/epymetheus/tree/master/epymetheus/metric)**: A metric is a function to assess the performance of your strategy. Available metrics include: final wealth, maximum drawdown, Sharpe ratio and so forth.
 
 ### Integrations
 
-Strategies may be integrated with:
-
-- **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [TensorFlow](https://github.com/tensorflow/tensorflow), [PyTorch](https://github.com/pytorch/pytorch), etc.
+- **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [PyTorch](https://github.com/pytorch/pytorch), [TensorFlow](https://github.com/tensorflow/tensorflow), etc.
 - **Econometrics**: [statsmodels](https://github.com/statsmodels/statsmodels), etc.
 - **Technical Indicators**: [TA-Lib](https://github.com/mrjbq7/ta-lib), etc.
-- **Derivative Pricing**: [TF Quant Finance](https://github.com/google/tf-quant-finance), etc.
-
-### Examples
-
-Example codes are provided [here](https://github.com/simaki/epymetheus/tree/master/examples).
+- **Hyperparameter Optimization**: [optuna](https://github.com/optuna/optuna). Example follows.
 
 ## Installation
 
@@ -51,97 +38,166 @@ $ pip install epymetheus
 
 ## How to use
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/epymetheus/blob/master/examples/howto/howto.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/epymetheus/blob/master/examples/readme/readme.ipynb)
 
-Let's construct your own `Strategy`.
+### Create strategy
+
+Let's construct your own strategy.  This strategy will:
+
+* buy the cheapest stock with your monthly allowance $100.0.
+* take profit if it exceeds $10.0 and make stop-loss order if the loss exceeds -$10.0.
 
 ```python
-from epymetheus import Trade, Strategy
+import epymetheus as ep
 
 
-class MyStrategy(Strategy):
-    """
-    This is my favorite strategy.
+def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
+    # I get allowance on the first business day of each month
+    allowance = 100.0
+    allowance_dates = pd.date_range(universe.prices.index[0], universe.prices.index[-1], freq="BMS")
+    
+    trades = []
+    for date in allowance_dates:
+        cheapest_stock = universe.prices.loc[date].idxmin()
 
-    Parameters
-    ----------
-    - my_parameter : float
-        My awesome parameter.
-    """
-    def __init__(self, my_parameter):
-        self.my_parameter = my_parameter
+        # Find the maximum number of shares that I can buy with my allowance
+        n_shares = allowance // universe.prices.at[date, cheapest_stock]
 
-    def logic(self, universe):
-        ...
-        yield Trade(...)
-
-
-strategy = MyStrategy(my_parameter=0.1)
+        trade = n_shares * ep.trade(
+            cheapest_stock,
+            open_bar=date,
+            take=profit_take,
+            stop=stop_loss,
+        )
+        trades.append(trade)
+        
+    return trades
 ```
 
-Your strategy can readily be backtested with any `Universe`.
+Here,
+
+* The first parameter `universe` is mandatory. It means a set of assets that you will trade (US stocks, cryptocurrencies, etc).
+* The following parameters, `profit_take` and `stop_loss` parametrize your strategy.
+
+You can create your strategy as:
+
+```python
+my_strategy = ep.create_strategy(dumb_strategy, profit_take=20.0, stop_loss=-10.0)
+```
+
+### Run strategy
+
+Now your strategy is readily backtested with any `Universe`.
 
 ```python
 from epymetheus.datasets import fetch_usstocks
 
-universe = Universe(df_prices)  # The historical prices that you have, or
-universe = fetch_usstocks(n_assets=10)  # Basic datasets provided by Epymetheus.
+universe = fetch_usstocks(n_assets=10)
+universe.prices
+#                  AAPL        MSFT         AMZN   BRK-A         JPM         JNJ         WMT        BAC          PG        XOM
+# 2000-01-01   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
+# 2000-01-02   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
+# 2000-01-03   0.855168   37.102634    89.375000   54800   26.053429   26.978193   45.391777  14.021359   30.625511  20.892334
+# 2000-01-04   0.783068   35.849308    81.937500   52000   25.481777   25.990519   43.693306  13.189125   30.036228  20.492161
+# 2000-01-05   0.794528   36.227283    69.750000   53200   25.324482   26.264877   42.801613  13.333860   29.464787  21.609318
 
-strategy.run(universe)
-# Running ...
-# Generating 478 trades (2019-12-31) ... Done. (Runtime : 0.30 sec)
-# Executing 478 trades ... Done. (Runtime : 0.41 sec)
-# Done. (Runtime : 0.71 sec)
+my_strategy.run(universe)
+# Yield 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.12 sec)
+# Execute 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.03 sec)
+# Done. (Runtime : 0.15 sec)
 ```
 
-Now the results can be accessed as the attributes of `strategy`.
-You can plot the wealth right away:
+### Trade history and wealth
+
+Trade history can be viewed as:
 
 ```python
-df_wealth = strategy.wealth.to_dataframe()
-
-df_wealth.plot()
+df_history = my_strategy.history.to_dataframe()
+df_history.head()
+#           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop        pnl
+# order_id                                                                             
+# 0                0  AAPL  116.0 2000-01-03 2000-01-06     None  20.0 -10.0 -15.010098
+# 1                1  AAPL  130.0 2000-02-01 2000-03-01     None  20.0 -10.0  29.856866
+# 2                2  AAPL  100.0 2000-03-01 2000-03-14     None  20.0 -10.0 -12.271219
+# 3                3  AAPL   98.0 2000-04-03 2000-04-11     None  20.0 -10.0 -10.388053
+# 4                4  AAPL  105.0 2000-05-01 2000-05-04     None  20.0 -10.0 -10.929523
 ```
 
-![wealth](examples/howto/wealth.png)
-
-You can also quickly `evaluate` various metrics of the perfornance.
-
-For example, drawdown, exposure and Sharpe ratio are given by:
+The time-series of wealth can be viewed as:
 
 ```python
-from epymetheus.metrics import Drawdown, MaxDrawdown, Exposure, SharpeRatio
-
-drawdown = strategy.evaluate(Drawdown())
-max_drawdown = strategy.evaluate(MaxDrawdown())
-net_exposure = strategy.evaluate(Exposure(net=True))
-abs_exposure = strategy.evaluate(Exposure(net=False))
-sharpe_ratio = strategy.evaluate(SharpeRatio())
+df_wealth = my_strategy.wealth.to_dataframe()
+df_wealth.head()
+#               wealth
+# bars
+# 2000-01-01  0.000000
+# 2000-01-02  0.000000
+# 2000-01-03  0.000000
+# 2000-01-04 -8.363557
+# 2000-01-05 -7.034265
 ```
 
-![drawdown](examples/howto/drawdown.png)
-![exposure](examples/howto/exposure.png)
+![wealth](examples/readme/wealth.png)
 
-Detailed trade history can be viewed as:
+### Scores
+
+You can also quickly `score` the metrics of the perfornance.
 
 ```python
-strategy.history.to_dataframe()
-# or: pandas.DataFrame(strategy.history)
+from epymetheus.metrics import Drawdown
+from epymetheus.metrics import MaxDrawdown
+from epymetheus.metrics import SharpeRatio
+
+drawdown = my_strategy.score(Drawdown())
+max_drawdown = my_strategy.score(MaxDrawdown())
+net_exposure = my_strategy.score(Exposure(net=True))
+abs_exposure = my_strategy.score(Exposure(net=False))
+sharpe_ratio = my_strategy.score(SharpeRatio())
 ```
 
-|   order_id |   trade_id | asset   |         lot | open_bar   | close_bar  | shut_bar   |   take |   stop |      pnl |
-|-----------:|-----------:|:--------|------------:|:-----------|:-----------|:-----------|-------:|-------:|---------:|
-|          0 |          0 | AMZN    | 145.191     | 2000-02-29 | 2000-04-05 | 2000-05-29 |   1000 |  -1000 | -970.962 |
-|          1 |          0 | BRK-A   |  -0.0227273 | 2000-02-29 | 2000-04-05 | 2000-05-29 |   1000 |  -1000 | -288.636 |
-|          2 |          1 | JPM     | 346.101     | 2000-02-29 | 2000-03-16 | 2000-05-29 |   1000 |  -1000 | 1318.68  |
-|          3 |          1 | WMT     | -29.9542    | 2000-02-29 | 2000-03-16 | 2000-05-29 |   1000 |  -1000 | -121.923 |
-|          4 |          2 | BRK-A   |   0.174825  | 2000-03-31 | 2000-06-30 | 2000-06-30 |   1000 |  -1000 | -594.406 |
+![drawdown](examples/readme/drawdown.png)
+![net_exposure](examples/readme/net_exposure.png)
 
-Profit-loss distribution can be accessed by:
+## More examples
+
+### Optimization
+
+You may optimize the parameter of your strategy using, for example, optuna.
+(Remember that optimization for backtesting is dangerous.)
 
 ```python
-pnl = strategy.history.groupby('trade_id').aggregate(sum).pnl
-plt.hist(pnl)
+import optuna
+
+
+def objective(trial):
+    profit_take = trial.suggest_int("profit_take", 10, 100)
+    stop_loss = trial.suggest_int("stop_loss", -100, -10)
+    
+    my_strategy = ep.create_strategy(
+        dumb_strategy,
+        profit_take=profit_take,
+        stop_loss=stop_loss,
+    )
+    my_strategy.run(universe, verbose=False)
+
+    return my_strategy.score(FinalWealth())
+
+
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=100)
+
+study.best_params
+# {'profit_take': 100, 'stop_loss': -83}
 ```
 
-![pnl](examples/howto/pnl.png)
+### Pair trading
+
+Trade can include multiple stocks.
+Profit-take and/or stop-loss will be executed when the total profit/loss exceeds the thresholds.
+
+```python
+def pair_trading(universe, param_1, ...):
+    ...
+    # Buy 1 share of "BULLISH_STOCK" and sell 2 share of "BEARISH_STOCK".
+    yield [1.0, -2.0] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
+```

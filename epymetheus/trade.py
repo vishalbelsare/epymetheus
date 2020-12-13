@@ -132,20 +132,6 @@ class Trade:
         Returns
         -------
         trade : Trade
-
-        Examples
-        --------
-        >>> t = Trade.trade("AAPL")
-        >>> t
-        trade(['AAPL'], lot=[1.])
-
-        >>> t = Trade.trade(["AAPL", "AMZN"])
-        >>> t
-        trade(['AAPL' 'AMZN'], lot=[1. 1.])
-
-        >>> t = Trade.trade(["AAPL", "AMZN"], lot=[1.0, 2.0])
-        >>> t
-        trade(['AAPL' 'AMZN'], lot=[1. 2.])
         """
         asset = np.asarray(asset).reshape(-1)
         lot = np.broadcast_to(np.asarray(lot), asset.shape)
@@ -508,6 +494,19 @@ class Trade:
         else:
             stop_bar = universe.bars[-1]
         return stop_bar
+
+    def __eq__(self, other):
+        attrs = (
+            "asset",
+            "lot",
+            "open_bar",
+            "shut_bar",
+            "take",
+            "stop",
+        )
+        return all(
+            getattr(self, attr, None) == getattr(other, attr, None) for attr in attrs
+        )
 
     def __mul__(self, num):
         return self.__rmul__(num)

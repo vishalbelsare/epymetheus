@@ -1,5 +1,4 @@
-from abc import ABCMeta
-from abc import abstractmethod
+import abc
 from functools import reduce
 
 import numpy as np
@@ -45,19 +44,19 @@ def _metric_from_name(name, **kwargs):
     return dict_metric[name](**kwargs)
 
 
-class Metric(metaclass=ABCMeta):
+class Metric(abc.ABC):
     """
     Base class of Metric.
     """
 
     @property
-    @abstractmethod
+    @abc.abstractmethod
     def name(self):
         """
         Return name of self.
         """
 
-    @abstractmethod
+    @abc.abstractmethod
     def result(self, strategy):
         """
         Evaluate metric of strategy.

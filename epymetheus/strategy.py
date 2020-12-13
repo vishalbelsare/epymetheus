@@ -1,5 +1,4 @@
-from abc import ABCMeta
-from abc import abstractmethod
+import abc
 from inspect import cleandoc
 from time import time
 
@@ -9,12 +8,41 @@ from epymetheus.history import History
 from epymetheus.wealth import Wealth
 
 
-class Strategy(metaclass=ABCMeta):
+def create_strategy(logic_func, **params):
+    """
+    Initialize `Strategy` from function.
+
+    Parameters
+    ----------
+    - logic_func : callable
+        Function that returns iterable from universe and parameters.
+    - **params
+        Parameter values.
+
+    Examples
+    --------
+    >>> from epymetheus import trade
+    ...
+    >>> def logic_func(universe, my_param):
+    ...     return [my_param * trade("A")]
+    ...
+    >>> strategy = create_strategy(logic_func, my_param=2.0)
+    >>> universe = None
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
+    """
+    return Strategy._create_strategy(logic_func=logic_func, params=params)
+
+
+class Strategy(abc.ABC):
     """
     Represents a strategy to trade.
 
     Parameters
     ----------
+    - logic : callable
+    -
+
     - name : str, optional
         Name of the strategy.
     - description : str, optional
@@ -36,7 +64,7 @@ class Strategy(metaclass=ABCMeta):
     Examples
     --------
     Define strategy by subclassing:
-    >>> from epymetheus import Trade
+    >>> from epymetheus import trade
     >>> class MyStrategy(Strategy):
     ...     '''
     ...     This is my favorite strategy.
@@ -46,7 +74,7 @@ class Strategy(metaclass=ABCMeta):
     ...
     ...     def logic(self, universe):
     ...         ...
-    ...         yield Trade(...)
+    ...         yield trade(...)
 
     Initialize:
     >>> my_strategy = MyStrategy(my_parameter=0.1)
@@ -65,10 +93,37 @@ class Strategy(metaclass=ABCMeta):
     - dump trades in a light data structure
     """
 
-    def __init__(self):
-        """Initialize self."""
+    def __init__(self, logic_func=None, name=None, description=None, params=None):
+        """
+        Initialize self.
+        """
+        if logic_func is not None:
+            self.logic_func = logic_func
+            self.params = params or {}
 
-    @abstractmethod
+    @classmethod
+    def _create_strategy(cls, logic_func, params):
+        """
+        Create strategy from logic function.
+
+        Parameters
+        ----------
+        - logic_func : callable
+        - params : dict
+
+        Returns
+        -------
+        strategy : Strategy
+        """
+        return cls(logic_func=logic_func, params=params)
+
+    def __call__(self, universe, to_list=True):
+        logic = getattr(self, "logic_func", self.logic)
+        trades = logic(universe, **getattr(self, "params", {}))
+        if to_list:
+            trades = list(trades)
+        return trades
+
     def logic(self, universe):
         """
         Logic to generate `Trade` from `Universe`.
@@ -104,29 +159,6 @@ class Strategy(metaclass=ABCMeta):
             description = cleandoc(self.__class__.__doc__)
         return description
 
-    # @property
-    # def params(self):
-    #     """
-    #     Return parameters of self as `dict`.
-
-    #     Returns
-    #     -------
-    #     parameters : dict
-    #         Names and values of parameters.
-
-    #     Examples
-    #     --------
-    #     >>> class MyStrategy:
-    #     ...     def __init__(self, param1, param2):
-    #     ...         self.param1 = param1
-    #     ...         self.param2 = param2
-    #     ...
-    #     >>> my_strategy = MyStrategy(param1=1.2, param2=3.4)
-    #     >>> my_strategy.params
-    #     {'param1': 1.2, 'param2': 3.4}
-    #     """
-    #     return self.__dict__
-
     @property
     def is_run(self):
         # Don't use "__is_run"; it cannot be accessed by getattr.
@@ -138,7 +170,7 @@ class Strategy(metaclass=ABCMeta):
 
     @property
     def n_orders(self):
-        return sum(trade.n_orders for trade in self.trades)
+        return sum(t.n_orders for t in self.trades)
 
     @property
     def history(self):
@@ -172,16 +204,50 @@ class Strategy(metaclass=ABCMeta):
 
         if verbose:
             begin_time = time()
-            print("Running ... ")
 
         self.universe = universe
-        self.__generate_trades(universe=universe, verbose=verbose)
-        self.__execute_trades(universe=universe, verbose=verbose)
+        self.trades = self.__generate_trades(universe, verbose=verbose)
+        self.__execute_trades(universe, verbose=verbose)
 
         self._is_run = True
 
         if verbose:
             print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
+
+        return self
+
+    def get_params(self):
+        """
+        Set the parameters of this strategy.
+
+        Returns
+        -------
+        params : dict[str, *]
+            Parameters.
+        """
+        return getattr(self, "params", {})
+
+    def set_params(self, **params):
+        """
+        Set the parameters of this strategy.
+
+        Parameters
+        ----------
+        - **params : dict
+            Strategy parameters.
+
+        Returns
+        -------
+        self : Strategy
+            Strategy with new parameters.
+        """
+        valid_keys = self.get_params().keys()
+
+        for key, value in params.items():
+            if key not in valid_keys:
+                raise ValueError(f"Invalid parameter: {key}")
+            else:
+                self.params[key] = value
 
         return self
 
@@ -200,49 +266,37 @@ class Strategy(metaclass=ABCMeta):
 
         Returns
         -------
-        self : Strategy
+        trades : list[Trade]
         """
+        _begin_time = time()
 
-        def iter_trades(verbose):
+        trades = []
+        for i, t in enumerate(self(universe, to_list=False) or []):
             if verbose:
-                begin_time = time()
-                for i, trade in enumerate(self.logic(universe) or []):
-                    print(
-                        f"\rGenerating {i + 1} trades " f"({trade.open_bar}) ... ",
-                        end="",
-                    )
-                    yield trade
-                print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
-            else:
-                for trade in self.logic(universe) or []:
-                    yield trade
+                print(f"\rYield {i + 1} trades: {t} ... ", end="")
+            trades.append(t)
 
-        self.trades = list(iter_trades(verbose))
+        if len(trades) == 0:
+            raise NoTradeError("No trade.")
 
-        if len(self.trades) == 0:
-            raise NoTradeError("No trades")
+        if verbose:
+            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
 
-        return self
+        return trades
 
     def __execute_trades(self, universe, verbose=True):
         """
         Execute trades.
-
-        Returns
-        -------
-        self : Strategy
         """
-        if verbose:
-            begin_time = time()
-            for i, trade in enumerate(self.trades):
-                print(f"\rExecuting {i + 1} trades ... ", end="")
-                trade.execute(universe)
-            print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
-        else:
-            for trade in self.trades:
-                trade.execute(universe)
+        _begin_time = time()
 
-        return self
+        for i, t in enumerate(self.trades):
+            if verbose:
+                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
+            t.execute(universe)
+
+        if verbose:
+            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
 
     def score(self, metric):
         """
@@ -259,4 +313,6 @@ class Strategy(metaclass=ABCMeta):
         return metric.result(self)
 
     def evaluate(self, metric):
-        raise DeprecationWarning("Strategy.evaluate(...) is deprecated. Use Strategy.score(...) instead.")
+        raise DeprecationWarning(
+            "Strategy.evaluate(...) is deprecated. Use Strategy.score(...) instead."
+        )

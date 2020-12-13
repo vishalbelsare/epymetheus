@@ -95,6 +95,7 @@ class TestArrayValue:
         universe = make_randomwalk(seed=seed)
         trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
         tradeA = a * trade0
+        print(trade0, tradeA)
         result0 = trade0._array_value(universe)
         resultA = tradeA._array_value(universe)
         assert np.allclose(a * result0, resultA)
