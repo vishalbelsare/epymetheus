@@ -19,11 +19,24 @@ if __name__ == "__main__":
 
     import epymetheus as ep
 
-    def dumb_strategy(universe, allowance):
+    def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
         """
         Buy the cheapest stock every month with my allowance.
+
+        Parameters
+        ----------
+        - profit_take : float, default None
+            Threshold (in unit of USD) to make profit-take order.
+        - stop_loss : float, default None
+            Threshold (in unit of USD) to make stop-loss order.
+
+        Yields
+        ------
+        trade : ep.trade
+            Trade object.
         """
         # I get allowance on the first business day of each month
+        allowance = 100.0
         allowance_dates = pd.date_range(
             universe.prices.index[0], universe.prices.index[-1], freq="BMS"
         )
@@ -34,22 +47,25 @@ if __name__ == "__main__":
             # Find the maximum number of shares that I can buy with my allowance
             n_shares = allowance // universe.prices.at[date, cheapest_stock]
             # Trade!
-            yield (
-                n_shares
-                * ep.trade(cheapest_stock, open_bar=date, take=20.0, stop=-10.0)
+            trade = n_shares * ep.trade(
+                cheapest_stock,
+                open_bar=date,
+                take=profit_take,
+                stop=stop_loss,
             )
+            yield trade
 
     # ---
 
-    my_strategy = ep.create_strategy(dumb_strategy, allowance=100.0)
+    my_strategy = ep.create_strategy(dumb_strategy, profit_take=20.0, stop_loss=-10.0)
 
     # ---
 
     from epymetheus.datasets import fetch_usstocks
 
     universe = fetch_usstocks()
-    print(">>> universe.prices")
-    print_as_comment(universe.prices)
+    print(">>> universe.prices.head()")
+    print_as_comment(universe.prices.head())
 
     my_strategy.run(universe)
 

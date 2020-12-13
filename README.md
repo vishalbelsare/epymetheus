@@ -53,14 +53,21 @@ $ pip install epymetheus
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/epymetheus/blob/master/examples/readme/readme.ipynb)
 
+### Create strategy
+
 Let's construct your own strategy.
 
 ```python
 import epymetheus as ep
 
-def dumb_strategy(universe, allowance):
+
+def dumb_strategy(universe, profit_take):
     """
     Buy the cheapest stock every month with my allowance.
+
+    Parameters
+    ----------
+    - profit_take :
     """
     # I get allowance on the first business day of each month
     allowance_dates = pd.date_range(
@@ -73,7 +80,7 @@ def dumb_strategy(universe, allowance):
         # Find the maximum number of shares that I can buy with my allowance
         n_shares = allowance // universe.prices.at[date, cheapest_stock]
         # Trade!
-        yield (n_shares * ep.trade(cheapest_stock, open_bar=date, take=20.0, stop=-10.0))
+        yield (n_shares * ep.trade(cheapest_stock, open_bar=date, take=profit_take, stop=-10.0))
 ```
 
 Here the first parameter `universe` is mandatory and means the target of trading (US stocks, JP stocks, set of cryptocurrencies, etc).
@@ -86,6 +93,8 @@ You can create your strategy with the specific value of `allowance` as follows.
 ```python
 my_strategy = ep.create_strategy(dumb_strategy, allowance=100.0)
 ```
+
+### Run strategy
 
 Now your strategy can readily be backtested with any `Universe`.
 
@@ -100,14 +109,6 @@ universe.prices
 # 2000-01-03   0.855168   37.102634    89.375000   54800   26.053429   26.978193   45.391777  14.021359   30.625511  20.892334
 # 2000-01-04   0.783068   35.849308    81.937500   52000   25.481777   25.990519   43.693306  13.189125   30.036228  20.492161
 # 2000-01-05   0.794528   36.227283    69.750000   53200   25.324482   26.264877   42.801613  13.333860   29.464787  21.609318
-# ...               ...         ...          ...     ...         ...         ...         ...        ...         ...        ...
-# 2019-12-27  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
-# 2019-12-28  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
-# 2019-12-29  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
-# 2019-12-30  71.669212  155.938049  1846.890015  338750  133.772079  141.454437  117.439545  34.231945  121.469902  64.341515
-# 2019-12-31  72.192863  156.046890  1847.839966  339590  134.515091  142.009354  116.888733  34.300117  121.889549  64.619324
-#
-# [7305 rows x 10 columns]
 
 my_strategy.run(universe)
 # Yield 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.12 sec)
@@ -115,7 +116,7 @@ my_strategy.run(universe)
 # Done. (Runtime : 0.15 sec)
 ```
 
-History.
+### Trade history and wealth
 
 ```python
 df_history = my_strategy.history.to_dataframe()
@@ -145,6 +146,8 @@ df_wealth.head()
 
 ![wealth](examples/readme/wealth.png)
 
+### Scores
+
 You can also quickly `score` metrics of the perfornance.
 
 For example, drawdown, exposure and Sharpe ratio are given by:
@@ -162,4 +165,32 @@ sharpe_ratio = my_strategy.score(SharpeRatio())
 ```
 
 ![drawdown](examples/readme/drawdown.png)
-![exposure](examples/readme/exposure.png)
+![net_exposure](examples/readme/net_exposure.png)
+
+### Optimization
+
+(Remember that optimization for backtesting is dangerous.)
+
+```python
+import optuna
+
+
+def objective(trial):
+    profit_take = trial.suggest_int("profit_take", 10, 100)
+    stop_loss = trial.suggest_int("stop_loss", -100, -10)
+    my_strategy = ep.create_strategy(
+        dumb_strategy,
+        profit_take=profit_take,
+        stop_loss=stop_loss,
+    )
+    my_strategy.run(universe, verbose=False)
+
+    return my_strategy.score(FinalWealth())
+
+
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=100)
+
+study.best_params
+# {'profit_take': 100, 'stop_loss': -83}
+```
