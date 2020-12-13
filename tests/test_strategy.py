@@ -52,6 +52,8 @@ class TestStrategy:
         assert strategy.get_params() == {"param_1": 1.0, "param_2": 2.0}
         strategy.set_params(param_1=3.0)
         assert strategy.get_params() == {"param_1": 3.0, "param_2": 2.0}
+        with pytest.raises(ValueError):
+            strategy.set_params(nonexistent_param=1.0)
 
     def test_warn(self):
         strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
