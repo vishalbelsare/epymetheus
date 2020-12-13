@@ -3,43 +3,25 @@ import pytest
 from itertools import cycle, islice
 
 import numpy as np
+from numpy.testing import assert_array_equal
 from random import choice, choices
-from epymetheus import Trade
+
+import epymetheus as ep
 
 
 def yield_trades(n_orders):
-    """
-    Examples
-    --------
-    >>> for trade in yield_trades(1):
-    ...     print(trade)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=0.0, take=1.0, stop=-1.0)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=1, take=1.0, stop=-1.0)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=1.23, take=1.0, stop=-1.0)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=-1.23, take=1.0, stop=-1.0)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=123.4, take=1.0, stop=-1.0)
-    Trade(asset='A0', open_bar='B0', shut_bar='B1', lot=-123.4, take=1.0, stop=-1.0)
-    >>> for trade in yield_trades(2):
-    ...     print(trade)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[0.0, 1], take=1.0, stop=-1.0)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[1, 1.23], take=1.0, stop=-1.0)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[1.23, -1.23], take=1.0, stop=-1.0)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[-1.23, 123.4], take=1.0, stop=-1.0)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[123.4, -123.4], take=1.0, stop=-1.0)
-    Trade(asset=['A0', 'A1'], open_bar='B0', shut_bar='B1', lot=[-123.4, 0.0], take=1.0, stop=-1.0)
-    """
     params_lot = [0.0, 1, 1.23, -1.23, 123.4, -123.4]
 
     if n_orders == 1:
         for lot in params_lot:
-            yield Trade(
+            yield ep.trade(
                 asset="A0", open_bar="B0", shut_bar="B1", lot=lot, take=1.0, stop=-1.0,
             )
     else:
         for i, _ in enumerate(params_lot):
             asset = [f"A{i}" for i in range(n_orders)]
             lot = list(islice(cycle(params_lot), i, i + n_orders))
-            yield Trade(
+            yield ep.trade(
                 asset=asset, open_bar="B0", shut_bar="B1", lot=lot, take=1.0, stop=-1.0,
             )
 
@@ -52,12 +34,12 @@ def assert_trade_operation(trade0, trade1, operator):
     """
     Examples
     --------
-    >>> trade0 = Trade(asset=['asset0', 'asset1'], lot=[1.0, -2.0])
-    >>> trade1 = Trade(asset=['asset0', 'asset1'], lot=[2.0, -4.0])
+    >>> trade0 = ep.trade(asset=['asset0', 'asset1'], lot=[1.0, -2.0])
+    >>> trade1 = ep.trade(asset=['asset0', 'asset1'], lot=[2.0, -4.0])
     >>> operator = lambda x: 2 * x
     >>> assert_trade_operation(trade0, trade1, operator)  # No Error
     """
-    assert trade0.asset == trade1.asset
+    assert_array_equal(trade0.asset, trade1.asset)
     assert trade0.open_bar == trade1.open_bar
     assert trade0.shut_bar == trade1.shut_bar
     assert np.allclose([operator(x) for x in trade0.array_lot], trade1.array_lot)

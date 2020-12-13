@@ -4,7 +4,44 @@ import numpy as np
 
 from epymetheus.utils.array import catch_first_index
 
-# TODO: check params
+
+def trade(
+    asset,
+    lot=1.0,
+    open_bar=None,
+    shut_bar=None,
+    take=None,
+    stop=None,
+):
+    """
+    Initialize `Trade`.
+
+    Returns
+    -------
+    trade : Trade
+
+    Examples
+    --------
+    >>> t = trade("AAPL")
+    >>> t
+    trade(['AAPL'], lot=[1.])
+
+    >>> t = trade(["AAPL", "AMZN"])
+    >>> t
+    trade(['AAPL' 'AMZN'], lot=[1. 1.])
+
+    >>> t = trade(["AAPL", "AMZN"], lot=[1.0, 2.0])
+    >>> t
+    trade(['AAPL' 'AMZN'], lot=[1. 2.])
+    """
+    return Trade.trade(
+        asset=asset,
+        lot=lot,
+        open_bar=open_bar,
+        shut_bar=shut_bar,
+        take=take,
+        stop=stop,
+    )
 
 
 class Trade:
@@ -38,7 +75,7 @@ class Trade:
     >>> import datetime
     >>> od = datetime.date(2018, 1, 1)
     >>> cd = datetime.date(2018, 2, 1)
-    >>> trade = Trade(
+    >>> t = trade(
     ...     asset='AAPL',
     ...     lot=2,
     ...     open_bar=datetime.date(2020, 1, 1),
@@ -47,7 +84,7 @@ class Trade:
 
     A short position:
     >>> import datetime
-    >>> trade = -2 * Trade(
+    >>> t = -2 * Trade(
     ...     asset='AAPL',
     ...     open_bar=datetime.date(2020, 1, 1),
     ...     shut_bar=datetime.date(2020, 2, 1),
@@ -55,7 +92,7 @@ class Trade:
 
     A long-short position:
     >>> import datetime
-    >>> trade = Trade(
+    >>> t = Trade(
     ...     asset=['AAPL', 'MSFT'],
     ...     lot=[1, -2],
     ...     open_bar=datetime.date(2020, 1, 1),
@@ -78,6 +115,49 @@ class Trade:
         self.shut_bar = shut_bar
         self.take = take
         self.stop = stop
+
+    @classmethod
+    def trade(
+        cls,
+        asset,
+        lot=1.0,
+        open_bar=None,
+        shut_bar=None,
+        take=None,
+        stop=None,
+    ):
+        """
+        Initialize `Trade`.
+
+        Returns
+        -------
+        trade : Trade
+
+        Examples
+        --------
+        >>> t = Trade.trade("AAPL")
+        >>> t
+        trade(['AAPL'], lot=[1.])
+
+        >>> t = Trade.trade(["AAPL", "AMZN"])
+        >>> t
+        trade(['AAPL' 'AMZN'], lot=[1. 1.])
+
+        >>> t = Trade.trade(["AAPL", "AMZN"], lot=[1.0, 2.0])
+        >>> t
+        trade(['AAPL' 'AMZN'], lot=[1. 2.])
+        """
+        asset = np.asarray(asset).reshape(-1)
+        lot = np.broadcast_to(np.asarray(lot), asset.shape)
+
+        return cls(
+            asset=asset,
+            lot=lot,
+            open_bar=open_bar,
+            shut_bar=shut_bar,
+            take=take,
+            stop=stop,
+        )
 
     @property
     def is_executed(self):
@@ -103,7 +183,7 @@ class Trade:
         >>> trade.array_asset
         array(['AAPL', 'MSFT'], dtype='<U4')
         """
-        return np.array(self.asset).reshape(-1)
+        return np.asarray(self.asset).reshape(-1)
 
     @property
     def array_lot(self):
@@ -123,7 +203,7 @@ class Trade:
         >>> trade.array_lot
         array([0.2, 0.4])
         """
-        return np.array(self.lot).reshape(-1)
+        return np.asarray(self.lot).reshape(-1)
 
     @property
     def n_orders(self):
@@ -430,21 +510,7 @@ class Trade:
         return stop_bar
 
     def __mul__(self, num):
-        """
-        Multiply lot of self.
-
-        Examples
-        --------
-        >>> trade = (-2.0) * Trade(asset="A0", lot=0.2)
-        >>> trade.lot
-        array([-0.4])
-        >>> trade = (-2.0) * Trade(asset=["A0", "A1"], lot=[0.2, 0.4])
-        >>> trade.lot
-        array([-0.4, -0.8])
-        """
-        self_copy = deepcopy(self)
-        self_copy.lot = num * self_copy.array_lot
-        return self_copy
+        return self.__rmul__(num)
 
     def __rmul__(self, num):
         """
@@ -452,14 +518,21 @@ class Trade:
 
         Examples
         --------
-        >>> trade = Trade(asset="A0", lot=0.2) * (-2.0)
-        >>> trade.lot
-        array([-0.4])
-        >>> trade = Trade(asset=["A0", "A1"], lot=[0.2, 0.4]) * (-2.0)
-        >>> trade.lot
-        array([-0.4, -0.8])
+        >>> trade("AMZN")
+        trade(['AMZN'], lot=[1.])
+        >>> (-2.0) * trade("AMZN")
+        trade(['AMZN'], lot=[-2.])
+
+        >>> trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[1. 1.])
+        >>> (-2.0) * trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[-2. -2.])
+        >>> [2.0, 3.0] * trade(["AMZN", "AAPL"])
+        trade(['AMZN' 'AAPL'], lot=[2. 3.])
         """
-        return self.__mul__(num)
+        t = deepcopy(self)
+        t.lot = t.lot * np.asarray(num)
+        return t
 
     def __neg__(self):
         """
@@ -467,14 +540,10 @@ class Trade:
 
         Examples
         --------
-        >>> trade = -Trade(asset="A0", lot=0.2)
-        >>> trade.lot
-        array([-0.2])
-        >>> trade = -Trade(asset=["A0", "A1"], lot=[0.2, 0.4])
-        >>> trade.lot
-        array([-0.2, -0.4])
+        >>> -trade("AMZN")
+        trade(['AMZN'], lot=[-1.])
         """
-        return self.__mul__(-1.0)
+        return (-1.0) * self
 
     def __truediv__(self, num):
         """
@@ -482,29 +551,29 @@ class Trade:
 
         Examples
         --------
-        >>> trade = Trade(asset="A0", lot=0.2) / 2.0
-        >>> trade.lot
-        array([0.1])
-        >>> trade = Trade(asset=["A0", "A1"], lot=[0.2, 0.4]) / 2.0
-        >>> trade.lot
-        array([0.1, 0.2])
+        >>> trade("AMZN", lot=2.0) / 2.0
+        trade(['AMZN'], lot=[1.])
+
+        >>> trade(["AMZN", "AAPL"], lot=[2.0, 4.0]) / 2.0
+        trade(['AMZN' 'AAPL'], lot=[1. 2.])
         """
         return self.__mul__(1.0 / num)
 
     def __repr__(self):
-        names = (
-            "asset",
-            "open_bar",
-            "shut_bar",
-            "close_bar",
-            "lot",
-            "take",
-            "stop",
-        )
-        list_params = [
-            name + "=" + repr(getattr(self, name))
-            for name in names
-            if getattr(self, name, None) is not None
-        ]
-        repr_params = ", ".join(list_params)
-        return "Trade(" + repr_params + ")"
+        """
+        >>> t = trade("AMZN", open_bar=1)
+        >>> t
+        trade(['AMZN'], lot=[1.], open_bar=1)
+
+        >>> t = trade("AMZN", take=100.0)
+        >>> t
+        trade(['AMZN'], lot=[1.], take=100.0)
+        """
+        params = [f"{self.asset}", f"lot={self.lot}"]
+
+        for attr in ("open_bar", "shut_bar", "take", "stop"):
+            value = getattr(self, attr)
+            if value is not None:
+                params.append(f"{attr}={value}")
+
+        return f"trade({', '.join(params)})"

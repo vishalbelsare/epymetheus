@@ -38,14 +38,14 @@ class TestBase:
 
     @pytest.mark.parametrize("MetricClass", params_metric)
     @pytest.mark.parametrize("seed", range(1))
-    def test_strategy_evaluate(self, MetricClass, seed):
+    def test_strategy_score(self, MetricClass, seed):
         """
-        Test if `strategy.evaluate(metric) == metric.result(strategy)`
+        Test if `strategy.score(metric) == metric.result(strategy)`
         """
         m = MetricClass()
         strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
         result0 = np.array(m.result(strategy))  # from metric method
-        result1 = np.array(strategy.evaluate(m))  # from strategy method
+        result1 = np.array(strategy.score(m))  # from strategy method
         assert np.equal(result0, result1).all()
 
     @pytest.mark.parametrize("MetricClass", params_metric)
@@ -76,12 +76,12 @@ class TestBase:
     @pytest.mark.parametrize("MetricClass", params_metric)
     def test_notrunerror(self, MetricClass):
         """
-        Metric is supposed to raise NotRunError when one tries to evaluate it
+        Metric is supposed to raise NotRunError when one tries to score it
         for a strategy which has not been run yet.
         """
         m = MetricClass()
         with pytest.raises(NotRunError):
-            RandomTrader(seed=42).evaluate(m)
+            RandomTrader(seed=42).score(m)
 
 
 class TestReturn:
