@@ -8,7 +8,7 @@
 [![LICENSE](https://img.shields.io/github/license/simaki/epymetheus)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-![wealth](examples/howto/wealth.png)
+![wealth](examples/readme/wealth.png)
 
 ## Introduction
 
@@ -37,7 +37,7 @@ Strategies may be integrated with:
 - **Machine Learning**: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [TensorFlow](https://github.com/tensorflow/tensorflow), [PyTorch](https://github.com/pytorch/pytorch), etc.
 - **Econometrics**: [statsmodels](https://github.com/statsmodels/statsmodels), etc.
 - **Technical Indicators**: [TA-Lib](https://github.com/mrjbq7/ta-lib), etc.
-- **Derivative Pricing**: [TF Quant Finance](https://github.com/google/tf-quant-finance), etc.
+- **Hyperparameter Optimization**: [optuna](https://github.com/optuna/optuna) ([Example](examples/examples/hypara.py))
 
 ### Examples
 
@@ -51,97 +51,115 @@ $ pip install epymetheus
 
 ## How to use
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/epymetheus/blob/master/examples/howto/howto.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simaki/epymetheus/blob/master/examples/readme/readme.ipynb)
 
-Let's construct your own `Strategy`.
+Let's construct your own strategy.
 
 ```python
-from epymetheus import Trade, Strategy
+import epymetheus as ep
 
-
-class MyStrategy(Strategy):
+def dumb_strategy(universe, allowance):
     """
-    This is my favorite strategy.
-
-    Parameters
-    ----------
-    - my_parameter : float
-        My awesome parameter.
+    Buy the cheapest stock every month with my allowance.
     """
-    def __init__(self, my_parameter):
-        self.my_parameter = my_parameter
+    # I get allowance on the first business day of each month
+    allowance_dates = pd.date_range(
+        universe.prices.index[0], universe.prices.index[-1], freq="BMS"
+    )
 
-    def logic(self, universe):
-        ...
-        yield Trade(...)
-
-
-strategy = MyStrategy(my_parameter=0.1)
+    for date in allowance_dates:
+        # Find the cheapest stock
+        cheapest_stock = universe.prices.loc[date].idxmin()
+        # Find the maximum number of shares that I can buy with my allowance
+        n_shares = allowance // universe.prices.at[date, cheapest_stock]
+        # Trade!
+        yield (n_shares * ep.trade(cheapest_stock, open_bar=date, take=20.0, stop=-10.0))
 ```
 
-Your strategy can readily be backtested with any `Universe`.
+Here the first parameter `universe` is mandatory and means the target of trading (US stocks, JP stocks, set of cryptocurrencies, etc).
+The second parameter, `allowance`, parametrizes your strategy.
+
+Profit-taking ($10) and Stop-loss (-$10).
+
+You can create your strategy with the specific value of `allowance` as follows.
+
+```python
+my_strategy = ep.create_strategy(dumb_strategy, allowance=100.0)
+```
+
+Now your strategy can readily be backtested with any `Universe`.
 
 ```python
 from epymetheus.datasets import fetch_usstocks
 
-universe = Universe(df_prices)  # The historical prices that you have, or
-universe = fetch_usstocks(n_assets=10)  # Basic datasets provided by Epymetheus.
+universe = fetch_usstocks(n_assets=10)
+universe.prices
+#                  AAPL        MSFT         AMZN   BRK-A         JPM         JNJ         WMT        BAC          PG        XOM
+# 2000-01-01   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
+# 2000-01-02   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
+# 2000-01-03   0.855168   37.102634    89.375000   54800   26.053429   26.978193   45.391777  14.021359   30.625511  20.892334
+# 2000-01-04   0.783068   35.849308    81.937500   52000   25.481777   25.990519   43.693306  13.189125   30.036228  20.492161
+# 2000-01-05   0.794528   36.227283    69.750000   53200   25.324482   26.264877   42.801613  13.333860   29.464787  21.609318
+# ...               ...         ...          ...     ...         ...         ...         ...        ...         ...        ...
+# 2019-12-27  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
+# 2019-12-28  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
+# 2019-12-29  71.246353  157.293686  1869.800049  338920  134.264221  141.892517  117.626419  34.426716  123.050858  64.721184
+# 2019-12-30  71.669212  155.938049  1846.890015  338750  133.772079  141.454437  117.439545  34.231945  121.469902  64.341515
+# 2019-12-31  72.192863  156.046890  1847.839966  339590  134.515091  142.009354  116.888733  34.300117  121.889549  64.619324
+#
+# [7305 rows x 10 columns]
 
-strategy.run(universe)
-# Running ...
-# Generating 478 trades (2019-12-31) ... Done. (Runtime : 0.30 sec)
-# Executing 478 trades ... Done. (Runtime : 0.41 sec)
-# Done. (Runtime : 0.71 sec)
+my_strategy.run(universe)
+# Yield 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.12 sec)
+# Execute 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00) ... Done. (Runtime : 0.03 sec)
+# Done. (Runtime : 0.15 sec)
 ```
 
-Now the results can be accessed as the attributes of `strategy`.
-You can plot the wealth right away:
+History.
 
 ```python
-df_wealth = strategy.wealth.to_dataframe()
-
-df_wealth.plot()
+df_history = my_strategy.history.to_dataframe()
+df_history.head()
+#           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop          pnl
+# order_id
+# 0                0  AAPL  116.0 2000-01-03 2019-12-31     None  None  None  8275.172683
+# 1                1  AAPL  130.0 2000-02-01 2019-12-31     None  None  None  9285.507999
+# 2                2  AAPL  100.0 2000-03-01 2019-12-31     None  None  None  7119.731641
+# 3                3  AAPL   98.0 2000-04-03 2019-12-31     None  None  None  6975.090952
+# 4                4  AAPL  105.0 2000-05-01 2019-12-31     None  None  None  7480.531225
 ```
 
-![wealth](examples/howto/wealth.png)
+Wealth.
 
-You can also quickly `evaluate` various metrics of the perfornance.
+```python
+df_wealth = my_strategy.wealth.to_dataframe()
+df_wealth.head()
+#               wealth
+# bars
+# 2000-01-01  0.000000
+# 2000-01-02  0.000000
+# 2000-01-03  0.000000
+# 2000-01-04 -8.363557
+# 2000-01-05 -7.034265
+```
+
+![wealth](examples/readme/wealth.png)
+
+You can also quickly `score` metrics of the perfornance.
 
 For example, drawdown, exposure and Sharpe ratio are given by:
 
 ```python
-from epymetheus.metrics import Drawdown, MaxDrawdown, Exposure, SharpeRatio
+from epymetheus.metrics import Drawdown
+from epymetheus.metrics import MaxDrawdown
+from epymetheus.metrics import SharpeRatio
 
-drawdown = strategy.evaluate(Drawdown())
-max_drawdown = strategy.evaluate(MaxDrawdown())
-net_exposure = strategy.evaluate(Exposure(net=True))
-abs_exposure = strategy.evaluate(Exposure(net=False))
-sharpe_ratio = strategy.evaluate(SharpeRatio())
+drawdown = my_strategy.score(Drawdown())
+max_drawdown = my_strategy.score(MaxDrawdown())
+net_exposure = my_strategy.score(Exposure(net=True))
+abs_exposure = my_strategy.score(Exposure(net=False))
+sharpe_ratio = my_strategy.score(SharpeRatio())
 ```
 
-![drawdown](examples/howto/drawdown.png)
-![exposure](examples/howto/exposure.png)
-
-Detailed trade history can be viewed as:
-
-```python
-strategy.history.to_dataframe()
-# or: pandas.DataFrame(strategy.history)
-```
-
-|   order_id |   trade_id | asset   |         lot | open_bar   | close_bar  | shut_bar   |   take |   stop |      pnl |
-|-----------:|-----------:|:--------|------------:|:-----------|:-----------|:-----------|-------:|-------:|---------:|
-|          0 |          0 | AMZN    | 145.191     | 2000-02-29 | 2000-04-05 | 2000-05-29 |   1000 |  -1000 | -970.962 |
-|          1 |          0 | BRK-A   |  -0.0227273 | 2000-02-29 | 2000-04-05 | 2000-05-29 |   1000 |  -1000 | -288.636 |
-|          2 |          1 | JPM     | 346.101     | 2000-02-29 | 2000-03-16 | 2000-05-29 |   1000 |  -1000 | 1318.68  |
-|          3 |          1 | WMT     | -29.9542    | 2000-02-29 | 2000-03-16 | 2000-05-29 |   1000 |  -1000 | -121.923 |
-|          4 |          2 | BRK-A   |   0.174825  | 2000-03-31 | 2000-06-30 | 2000-06-30 |   1000 |  -1000 | -594.406 |
-
-Profit-loss distribution can be accessed by:
-
-```python
-pnl = strategy.history.groupby('trade_id').aggregate(sum).pnl
-plt.hist(pnl)
-```
-
-![pnl](examples/howto/pnl.png)
+![drawdown](examples/readme/drawdown.png)
+![exposure](examples/readme/exposure.png)

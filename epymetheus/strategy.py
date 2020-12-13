@@ -204,7 +204,6 @@ class Strategy(abc.ABC):
 
         if verbose:
             begin_time = time()
-            print("Running ... ")
 
         self.universe = universe
         self.trades = self.__generate_trades(universe, verbose=verbose)
