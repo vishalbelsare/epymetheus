@@ -61,15 +61,24 @@ Let's construct your own strategy.
 import epymetheus as ep
 
 
-def dumb_strategy(universe, profit_take):
+def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
     """
     Buy the cheapest stock every month with my allowance.
 
     Parameters
     ----------
-    - profit_take :
+    - profit_take : float, default None
+        Threshold (in unit of USD) to make profit-take order.
+    - stop_loss : float, default None
+        Threshold (in unit of USD) to make stop-loss order.
+
+    Yields
+    ------
+    trade : ep.trade
+        Trade object.
     """
     # I get allowance on the first business day of each month
+    allowance = 100.0
     allowance_dates = pd.date_range(
         universe.prices.index[0], universe.prices.index[-1], freq="BMS"
     )
@@ -77,10 +86,18 @@ def dumb_strategy(universe, profit_take):
     for date in allowance_dates:
         # Find the cheapest stock
         cheapest_stock = universe.prices.loc[date].idxmin()
+
         # Find the maximum number of shares that I can buy with my allowance
         n_shares = allowance // universe.prices.at[date, cheapest_stock]
+
         # Trade!
-        yield (n_shares * ep.trade(cheapest_stock, open_bar=date, take=profit_take, stop=-10.0))
+        trade = n_shares * ep.trade(
+            cheapest_stock,
+            open_bar=date,
+            take=profit_take,
+            stop=stop_loss,
+        )
+        yield trade
 ```
 
 Here the first parameter `universe` is mandatory and means the target of trading (US stocks, JP stocks, set of cryptocurrencies, etc).

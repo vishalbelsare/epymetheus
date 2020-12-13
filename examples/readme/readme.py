@@ -44,8 +44,10 @@ if __name__ == "__main__":
         for date in allowance_dates:
             # Find the cheapest stock
             cheapest_stock = universe.prices.loc[date].idxmin()
+
             # Find the maximum number of shares that I can buy with my allowance
             n_shares = allowance // universe.prices.at[date, cheapest_stock]
+
             # Trade!
             trade = n_shares * ep.trade(
                 cheapest_stock,
