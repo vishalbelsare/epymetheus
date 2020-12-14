@@ -195,18 +195,39 @@ class Strategy(abc.ABC):
         -------
         self
         """
-        if verbose:
-            begin_time = time()
+        _begin_time = time()
 
         self.universe = universe
-        self.trades = self.__generate_trades(universe, verbose=verbose)
-        self.__execute_trades(universe, verbose=verbose)
 
-        self._is_run = True
+        # Yield trades
+        _begin_time_yield = time()
+        trades = []
+        for i, t in enumerate(self(universe, to_list=False) or []):
+            if verbose:
+                print(f"\rYield {i + 1} trades: {t} ... ", end="")
+            trades.append(t)
+        if len(trades) == 0:
+            raise NoTradeError("No trade.")
+        if verbose:
+            _time = time() - _begin_time_yield
+            print(f"Done. (Runtume: {_time:.4f} sec)")
+
+        # Execute trades
+        _begin_time_execute = time()
+        for i, t in enumerate(trades):
+            if verbose:
+                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
+            t.execute(universe)
+        if verbose:
+            _time = time() - _begin_time_execute
+            print(f"Done. (Runtime: {_time:.4f} sec)")
 
         if verbose:
-            print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
+            _time = time() - _begin_time
+            print(f"Done. (Runtime: {_time:.4f} sec)")
 
+        self.trades = trades
+        self._is_run = True
         return self
 
     def get_params(self):
@@ -243,49 +264,6 @@ class Strategy(abc.ABC):
                 self.params[key] = value
 
         return self
-
-    def __generate_trades(self, universe, verbose=True):
-        """
-        Generate trades according to `self.logic`.
-        It sets `self.trades`.
-
-        Parameters
-        ----------
-        - verbose : bool
-
-        Returns
-        -------
-        trades : list[Trade]
-        """
-        _begin_time = time()
-
-        trades = []
-        for i, t in enumerate(self(universe, to_list=False) or []):
-            if verbose:
-                print(f"\rYield {i + 1} trades: {t} ... ", end="")
-            trades.append(t)
-
-        if len(trades) == 0:
-            raise NoTradeError("No trade.")
-
-        if verbose:
-            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
-
-        return trades
-
-    def __execute_trades(self, universe, verbose=True):
-        """
-        Execute trades.
-        """
-        _begin_time = time()
-
-        for i, t in enumerate(self.trades):
-            if verbose:
-                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
-            t.execute(universe)
-
-        if verbose:
-            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
 
     def score(self, metric):
         """
