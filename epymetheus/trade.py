@@ -328,7 +328,6 @@ class Trade:
     #     """
     #     universe = self.__to_dataframe(universe)
 
-
     #     i_open= universe.index.get_indexer([self.open_bar]).item()
     #     i_close= universe.index.get_indexer([self.close_bar]).item()
 

@@ -368,7 +368,7 @@ class Exposure(Metric):
 
             value = t.array_value(strategy.universe).astype(exposure.dtype)
             value[:i_open] = 0
-            value[i_close:] = 0
+            value[i_close + 1 :] = 0
 
             if self.net:
                 exposure += value.sum(axis=1)
