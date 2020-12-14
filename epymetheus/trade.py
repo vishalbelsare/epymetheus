@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from epymetheus.utils.array import catch_first_index
+from epymetheus.universe import Universe
 
 
 def trade(
@@ -218,46 +218,53 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = ep.Universe(pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5, 6, 7],
         ...     "A1": [2, 3, 4, 5, 6, 7, 8],
         ...     "A2": [3, 4, 5, 6, 7, 8, 9],
         ... }, dtype=float))
-        >>> trade0 = Trade(asset="A0", lot=1.0, open_bar=1, shut_bar=6)
-        >>> trade0 = trade0.execute(universe)
-        >>> trade0.close_bar
+        >>> t = ep.trade("A0", open_bar=1, shut_bar=6)
+        >>> t = t.execute(universe)
+        >>> t.close_bar
         6
-        >>> trade1 = Trade(asset="A0", lot=1.0, open_bar=1, shut_bar=6, take=2)
-        >>> trade1 = trade1.execute(universe)
-        >>> trade1.close_bar
+        >>> t = ep.trade("A0", open_bar=1, shut_bar=6, take=2)
+        >>> t = t.execute(universe)
+        >>> t.close_bar
         3
-        >>> trade2 = Trade(asset="A0", lot=-1.0, open_bar=1, shut_bar=6, stop=-2)
-        >>> trade2 = trade2.execute(universe)
-        >>> trade2.close_bar
+        >>> t = -ep.trade(asset="A0", open_bar=1, shut_bar=6, stop=-2)
+        >>> t = t.execute(universe)
+        >>> t.close_bar
         3
         """
-        # Compute close_bar
-        stop_bar = self.__stop_bar(universe)
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
 
-        if self.take is None and self.stop is None:
-            close_bar = stop_bar
-        else:
+        # If already executed
+        if hasattr(self, "close_bar"):
+            return self
+
+        # Compute close_bar
+        close = universe.index[-1] if self.shut_bar is None else self.shut_bar
+
+        if (self.take is not None) or (self.stop is not None):
             series_pnl = self.series_pnl(universe)
 
-            signal_take = series_pnl >= (self.take or np.inf)
-            signal_stop = series_pnl <= (self.stop or -np.inf)
+            signal = np.logical_or(
+                series_pnl >= (self.take or +np.inf),
+                series_pnl <= (self.stop or -np.inf),
+            )
+            index_signal = np.searchsorted(signal, True)
+            index_close = universe.index.get_indexer([close]).item()
+            index_close %= len(universe.index)  # If -1 (not found), len(universe.index)
 
-            close_bar_index = catch_first_index(np.logical_or(signal_take, signal_stop))
-            stop_bar_index = universe.get_bar_indexer(stop_bar)
+            index_close = min(index_close, index_signal)
 
-            if close_bar_index == -1 or close_bar_index > stop_bar_index:
-                close_bar = stop_bar
-            else:
-                close_bar = universe.bars[close_bar_index]
+            close = universe.index[index_close]
 
-        self.close_bar = close_bar
+        self.close_bar = close
         self._is_executed = True
 
         return self
@@ -287,10 +294,13 @@ class Trade:
                [  8., -18.],
                [ 10., -21.]])
         """
-        asset_index = universe.get_asset_indexer(self.asset)
-        array_prices = universe.prices.iloc[:, asset_index].values
-        # (n_orders, ) * (n_bars, n_orders) -> (n_bars, n_orders)
-        array_value = self.lot * array_prices
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
+        # (n_assets, ) * (n_bars, n_assets) -> (n_bars, n_orders)
+        array_value = self.lot * universe.loc[:, self.asset].values
+
         return array_value
 
     def array_exposure(self, universe):
@@ -303,14 +313,14 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = ep.Universe(pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
         ... }, dtype=float))
-        >>> trade = Trade(asset=["A0", "A2"], lot=[2, -3], open_bar=1, shut_bar=3)
+        >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
         >>> trade.array_exposure(universe)
         array([[  0.,   0.],
                [  4., -12.],
@@ -318,16 +328,22 @@ class Trade:
                [  8., -18.],
                [  0.,   0.]])
         """
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
         array_value = self._array_value(universe)
 
-        stop_bar = self.__stop_bar(universe)
+        stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
 
-        open_bar_index = universe.get_bar_indexer(self.open_bar)[0]
-        stop_bar_index = universe.get_bar_indexer(stop_bar)[0]
+        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
+        stop_bar_index = universe.index.get_indexer([stop_bar]).item()
 
         array_exposure = array_value
         array_exposure[:open_bar_index] = 0
         array_exposure[stop_bar_index + 1 :] = 0
+
+        array_exposure = array_exposure.reshape(-1, self.asset.size)
 
         return array_exposure
 
@@ -348,19 +364,23 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
-        >>> trade = Trade(asset=["A0", "A2"], lot=[2, -3], open_bar=1, shut_bar=3)
-        >>> trade.series_exposure(universe, net=True)
+        ... }, dtype=float)
+        >>> t = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+        >>> t.series_exposure(universe, net=True)
         array([  0.,  -8.,  -9., -10.,   0.])
-        >>> trade.series_exposure(universe, net=False)
+        >>> t.series_exposure(universe, net=False)
         array([ 0., 16., 21., 26.,  0.])
         """
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
         array_exposure = self.array_exposure(universe)
         if net:
             series_exposure = array_exposure.sum(axis=1)
@@ -379,14 +399,13 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
-        ...     "A1": [2, 3, 4, 5, 6],
-        ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
-        >>> trade = Trade(asset=["A0", "A2"], lot=[2, -3], open_bar=1, shut_bar=3)
+        ...     "A1": [3, 4, 5, 6, 7],
+        ... }, dtype=float)
+        >>> trade = [2, -3] * ep.trade(["A0", "A1"], open_bar=1, shut_bar=3)
         >>> trade.array_pnl(universe)
         array([[ 0.,  0.],
                [ 0.,  0.],
@@ -394,17 +413,23 @@ class Trade:
                [ 4., -6.],
                [ 4., -6.]])
         """
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
         array_value = self._array_value(universe)
 
-        stop_bar = self.__stop_bar(universe)
+        stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
 
-        open_bar_index = universe.get_bar_indexer(self.open_bar)[0]
-        stop_bar_index = universe.get_bar_indexer(stop_bar)[0]
+        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
+        stop_bar_index = universe.index.get_indexer([stop_bar]).item()
 
         array_pnl = array_value
         array_pnl -= array_pnl[open_bar_index]
         array_pnl[:open_bar_index] = 0
         array_pnl[stop_bar_index:] = array_pnl[stop_bar_index]
+
+        array_pnl = array_pnl.reshape(-1, self.asset.size)
 
         return array_pnl
 
@@ -418,18 +443,22 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
-        >>> trade = Trade(asset="A0", lot=1, open_bar=1, shut_bar=3)
-        >>> trade = trade.execute(universe)
-        >>> trade.series_pnl(universe)
+        ... }, dtype=float)
+        >>> t = ep.trade("A0", lot=1, open_bar=1, shut_bar=3)
+        >>> t = t.execute(universe)
+        >>> t.series_pnl(universe)
         array([0., 0., 1., 2., 2.])
         """
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
         return self.array_pnl(universe).sum(axis=1)
 
     def final_pnl(self, universe):
@@ -447,36 +476,30 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
-        >>> trade = Trade(asset=["A0", "A2"], lot=1, open_bar=1, shut_bar=3)
-        >>> trade = trade.execute(universe)
-        >>> trade.final_pnl(universe)
+        ... }, dtype=float)
+        >>> t = ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+        >>> t = t.execute(universe)
+        >>> t.final_pnl(universe)
         array([2., 2.])
         """
-        # TODO: make it more efficient
-        open_bar_index = universe.get_bar_indexer(self.open_bar)[0]
-        close_bar_index = universe.get_bar_indexer(self.close_bar)[0]
+        # Backward compatibility
+        if isinstance(universe, Universe):
+            universe = universe.prices
+
+        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
+        close_bar_index = universe.index.get_indexer([self.close_bar]).item()
         array_exposure = self.array_exposure(universe)
         final_pnl = (
             array_exposure[close_bar_index, :] - array_exposure[open_bar_index, :]
         )
 
         return final_pnl
-
-    def __stop_bar(self, universe):
-        if self.is_executed:
-            stop_bar = self.close_bar
-        elif self.shut_bar is not None:
-            stop_bar = self.shut_bar
-        else:
-            stop_bar = universe.bars[-1]
-        return stop_bar
 
     def __eq__(self, other):
         attrs = (
