@@ -238,9 +238,7 @@ class Trade:
         >>> t.close_bar
         3
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         # If already executed
         if hasattr(self, "close_bar"):
@@ -295,9 +293,7 @@ class Trade:
                [  8., -18.],
                [ 10., -21.]])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         # (n_assets, ) * (n_bars, n_assets) -> (n_bars, n_orders)
         array_value = self.lot * universe.loc[:, self.asset].values
@@ -330,9 +326,7 @@ class Trade:
                [  8., -18.],
                [  0.,   0.]])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         array_value = self._array_value(universe)
 
@@ -380,9 +374,7 @@ class Trade:
         >>> t.series_exposure(universe, net=False)
         array([ 0., 16., 21., 26.,  0.])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         array_exposure = self.array_exposure(universe)
         if net:
@@ -416,9 +408,7 @@ class Trade:
                [ 4., -6.],
                [ 4., -6.]])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         array_value = self._array_value(universe)
 
@@ -459,9 +449,7 @@ class Trade:
         >>> t.series_pnl(universe)
         array([0., 0., 1., 2., 2.])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         return self.array_pnl(universe).sum(axis=1)
 
@@ -493,9 +481,7 @@ class Trade:
         >>> t.final_pnl(universe)
         array([2., 2.])
         """
-        # Backward compatibility
-        if isinstance(universe, Universe):
-            universe = universe.prices
+        universe = self.__to_dataframe(universe)
 
         open_bar_index = universe.index.get_indexer([self.open_bar]).item()
         close_bar_index = universe.index.get_indexer([self.close_bar]).item()
@@ -587,3 +573,8 @@ class Trade:
                 params.append(f"{attr}={value}")
 
         return f"trade({', '.join(params)})"
+
+    @staticmethod
+    def __to_dataframe(universe):
+        # Backward compatibility
+        return universe.prices if isinstance(universe, Universe) else universe

@@ -13,9 +13,10 @@ class TestIsExecuted:
     trade0 = Trade(asset="A0", lot=1.0)
 
     def test_value(self):
+        np.random.seed(42)
         trade = self.trade0
         assert not trade.is_executed
-        trade = trade.execute(make_randomwalk(seed=42))
+        trade = trade.execute(make_randomwalk())
         assert trade.is_executed
 
 

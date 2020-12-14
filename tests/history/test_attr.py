@@ -9,8 +9,12 @@ from epymetheus.benchmarks import DeterminedTrader, RandomTrader
 
 
 class TestBase:
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
     def _get_history(self):
-        universe = make_randomwalk(seed=42)
+        universe = make_randomwalk()
         strategy = RandomTrader(seed=42).run(universe)
         return History(strategy)
 
@@ -18,7 +22,7 @@ class TestBase:
         """
         `History.__init__` and `strategy.history` are supposed to give the same results.
         """
-        universe = make_randomwalk(seed=42)
+        universe = make_randomwalk()
         strategy = RandomTrader(seed=42).run(universe)
 
         result0 = pd.DataFrame(History(strategy))  # from History.__init__
@@ -69,6 +73,10 @@ class TestColumn:
             stop=-2.0,
         ),
     ]
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     def _get_history(self):
         strategy = DeterminedTrader(trades=self.trades).run(self.universe)

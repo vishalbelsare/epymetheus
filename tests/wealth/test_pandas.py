@@ -65,7 +65,7 @@ def test_dataframe_index():
     wealth = Wealth(strategy)
     df_wealth = wealth.to_dataframe()
 
-    assert_index_equal(df_wealth.index, universe.bars, check_names=False)
+    assert_index_equal(df_wealth.index, universe.index, check_names=False)
 
 
 def test_dataframe_value():

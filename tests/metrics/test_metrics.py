@@ -37,6 +37,10 @@ class TestBase:
         Exposure,
     ]
 
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
     @pytest.mark.parametrize("MetricClass", params_metric)
     @pytest.mark.parametrize("seed", range(1))
     def test_strategy_score(self, MetricClass, seed):
@@ -44,7 +48,7 @@ class TestBase:
         Test if `strategy.score(metric) == metric.result(strategy)`
         """
         m = MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         result0 = np.array(m.result(strategy))  # from metric method
         result1 = np.array(strategy.score(m))  # from strategy method
         assert np.equal(result0, result1).all()
@@ -56,7 +60,7 @@ class TestBase:
         Test if `metric.result(strategy) == metric(strategy)`.
         """
         m = MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         result0 = np.array(m.result(strategy))  # from `result` method
         result1 = np.array(m(strategy))  # from __call__
         assert np.equal(result0, result1).all()
@@ -92,6 +96,10 @@ class TestReturn:
 
     MetricClass = Return
 
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
     @pytest.mark.parametrize("rate", [True, False])
     @pytest.mark.parametrize("init_wealth", [100.0])
     @pytest.mark.parametrize("n_bars", [100])
@@ -122,7 +130,7 @@ class TestReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate)
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         series_wealth = init_wealth + strategy.wealth.wealth
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
@@ -135,6 +143,10 @@ class TestAverageReturn:
     """
 
     MetricClass = AverageReturn
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     @pytest.mark.parametrize("rate", [True, False])
     @pytest.mark.parametrize("n", [1, 365])
@@ -168,7 +180,7 @@ class TestAverageReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate, n=n)
-        strategy = RandomTrader(seed=42).run(make_randomwalk(seed=42))
+        strategy = RandomTrader(seed=42).run(make_randomwalk())
         series_wealth = init_wealth + strategy.wealth.wealth
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
@@ -177,6 +189,10 @@ class TestAverageReturn:
 
 class TestFinalWealth:
     MetricClass = FinalWealth
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     @pytest.mark.parametrize("init_wealth", [0.0, 100.0])
     @pytest.mark.parametrize("n_bars", [100])
@@ -201,7 +217,7 @@ class TestFinalWealth:
     @pytest.mark.parametrize("seed", range(1))
     def test_result(self, seed):
         m = self.MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         result0 = m.result(strategy)
         result1 = m._result_from_wealth(strategy.wealth.wealth)
         assert result0 == result1
@@ -213,6 +229,10 @@ class TestDrawdown:
     """
 
     MetricClass = Drawdown
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     @pytest.mark.parametrize("rate", [True, False])
     @pytest.mark.parametrize("init_wealth", [100.0])
@@ -249,7 +269,7 @@ class TestDrawdown:
     @pytest.mark.parametrize("rate", [True, False])
     def test_result(self, seed, rate):
         m = self.MetricClass(rate=rate)
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
 
         result0 = m.result(strategy)
         result1 = m._result_from_wealth(strategy.wealth.wealth)
@@ -259,6 +279,10 @@ class TestDrawdown:
 
 class TestMaxDrawdown:
     MetricClass = MaxDrawdown
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     def test_zero(self):
         pass  # TODO
@@ -290,7 +314,7 @@ class TestMaxDrawdown:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         metric = self.MetricClass(rate=rate)
         result = metric.result(strategy, init_wealth=init_wealth)
         expected = np.min(Drawdown(rate=rate).result(strategy, init_wealth=init_wealth))
@@ -299,6 +323,10 @@ class TestMaxDrawdown:
 
 class TestVolatility:
     MetricClass = Volatility
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     @pytest.mark.parametrize("rate", [True, False])
     @pytest.mark.parametrize("init_wealth", [100.0])
@@ -340,6 +368,10 @@ class TestSharpeRatio:
     Test `SharpeRatio`.
     """
 
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
     MetricClass = SharpeRatio
 
     @pytest.mark.parametrize("rate", [True, False])
@@ -362,7 +394,7 @@ class TestSharpeRatio:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, n, risk_free_return, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk())
         metric = self.MetricClass(rate=rate, n=n, risk_free_return=risk_free_return)
         result = metric.result(strategy, init_wealth=init_wealth)
         r = AverageReturn(rate=rate, n=n).result(strategy, init_wealth=init_wealth)
@@ -390,6 +422,15 @@ class TestExposure:
             "A1": [2, 7, 1, 8, 1, 8, 1],
         }
     )
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
+    @pytest.mark.parametrize("rate", [True, False])
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     @pytest.mark.parametrize("net", [True, False])
     @pytest.mark.parametrize("n_bars", [100])
