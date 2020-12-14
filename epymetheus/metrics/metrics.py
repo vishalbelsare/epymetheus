@@ -360,11 +360,22 @@ class Exposure(Metric):
         return "exposure"
 
     def result(self, strategy):
-        exposures = (
-            trade.series_exposure(strategy.universe, net=self.net)
-            for trade in strategy.trades
-        )
-        return reduce(np.add, exposures)
+        exposure = np.zeros_like(strategy.universe.iloc[:, 0])
+
+        for t in strategy.trades:
+            i_open = strategy.universe.index.get_indexer([t.open_bar]).item()
+            i_close = strategy.universe.index.get_indexer([t.close_bar]).item()
+
+            value = t.array_value(strategy.universe).astype(exposure.dtype)
+            value[:i_open] = 0
+            value[i_close:] = 0
+
+            if self.net:
+                exposure += value.sum(axis=1)
+            else:
+                exposure += np.abs(value).sum(axis=1)
+
+        return exposure
 
 
 # class Beta(Metric):

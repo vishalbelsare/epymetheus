@@ -300,89 +300,86 @@ class Trade:
         array_value = self.lot * universe.loc[:, self.asset].values
         return array_value
 
-    def array_exposure(self, universe):
-        """
-        Return exposure of self for each order.
+    # def array_exposure(self, universe):
+    #     """
+    #     Return exposure of self for each order.
 
-        Returns
-        -------
-        array_exposure : numpy.array, shape (n_bars, n_orders)
+    #     Returns
+    #     -------
+    #     array_exposure : numpy.array, shape (n_bars, n_orders)
 
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> import epymetheus as ep
-        ...
-        >>> universe = pd.DataFrame({
-        ...     "A0": [1, 2, 3, 4, 5],
-        ...     "A1": [2, 3, 4, 5, 6],
-        ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float)
-        >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
-        >>> trade.array_exposure(universe)
-        array([[  0.,   0.],
-               [  4., -12.],
-               [  6., -15.],
-               [  8., -18.],
-               [  0.,   0.]])
-        """
-        universe = self.__to_dataframe(universe)
+    #     Examples
+    #     --------
+    #     >>> import pandas as pd
+    #     >>> import epymetheus as ep
+    #     ...
+    #     >>> universe = pd.DataFrame({
+    #     ...     "A0": [1, 2, 3, 4, 5],
+    #     ...     "A1": [2, 3, 4, 5, 6],
+    #     ...     "A2": [3, 4, 5, 6, 7],
+    #     ... }, dtype=float)
+    #     >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+    #     >>> trade.array_exposure(universe)
+    #     array([[  0.,   0.],
+    #            [  4., -12.],
+    #            [  6., -15.],
+    #            [  8., -18.],
+    #            [  0.,   0.]])
+    #     """
+    #     universe = self.__to_dataframe(universe)
 
-        array_value = self.array_value(universe)
 
-        stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
+    #     i_open= universe.index.get_indexer([self.open_bar]).item()
+    #     i_close= universe.index.get_indexer([self.close_bar]).item()
 
-        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
-        stop_bar_index = universe.index.get_indexer([stop_bar]).item()
+    #     value = self.array_value(universe)
+    #     value[:open_bar_index] = 0
+    #     value[stop_bar_index + 1 :] = 0
 
-        array_exposure = array_value
-        array_exposure[:open_bar_index] = 0
-        array_exposure[stop_bar_index + 1 :] = 0
+    #     array_exposure = array_exposure.reshape(-1, self.asset.size)
 
-        array_exposure = array_exposure.reshape(-1, self.asset.size)
+    #     return array_exposure
 
-        return array_exposure
+    # def series_exposure(self, universe, net=True):
+    #     """
+    #     Return time-series of value of the position.
 
-    def series_exposure(self, universe, net=True):
-        """
-        Return time-series of value of the position.
+    #     Parameters
+    #     ----------
+    #     - universe : pandas.DataFram e
+    #     - net : bool, default True
+    #         If True, return net exposure.
+    #         If False, return absolute exposure.
 
-        Parameters
-        ----------
-        - universe : pandas.DataFram e
-        - net : bool, default True
-            If True, return net exposure.
-            If False, return absolute exposure.
+    #     Returns
+    #     -------
+    #     series_exposure : numpy.array, shape (n_bars, )
 
-        Returns
-        -------
-        series_exposure : numpy.array, shape (n_bars, )
+    #     Examples
+    #     --------
+    #     >>> import pandas as pd
+    #     >>> import epymetheus as ep
+    #     ...
+    #     >>> universe = pd.DataFrame({
+    #     ...     "A0": [1, 2, 3, 4, 5],
+    #     ...     "A1": [2, 3, 4, 5, 6],
+    #     ...     "A2": [3, 4, 5, 6, 7],
+    #     ... })
+    #     >>> t = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+    #     >>> t.series_exposure(universe, net=True)
+    #     array([  0.,  -8.,  -9., -10.,   0.])
+    #     >>> t.series_exposure(universe, net=False)
+    #     array([ 0., 16., 21., 26.,  0.])
+    #     """
+    #     universe = self.__to_dataframe(universe)
 
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> import epymetheus as ep
-        ...
-        >>> universe = pd.DataFrame({
-        ...     "A0": [1, 2, 3, 4, 5],
-        ...     "A1": [2, 3, 4, 5, 6],
-        ...     "A2": [3, 4, 5, 6, 7],
-        ... })
-        >>> t = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
-        >>> t.series_exposure(universe, net=True)
-        array([  0.,  -8.,  -9., -10.,   0.])
-        >>> t.series_exposure(universe, net=False)
-        array([ 0., 16., 21., 26.,  0.])
-        """
-        universe = self.__to_dataframe(universe)
+    #     array_exposure = self.array_exposure(universe)
+    #     if net:
+    #         series_exposure = array_exposure.sum(axis=1)
+    #     else:
+    #         series_exposure = np.abs(array_exposure).sum(axis=1)
 
-        array_exposure = self.array_exposure(universe)
-        if net:
-            series_exposure = array_exposure.sum(axis=1)
-        else:
-            series_exposure = np.abs(array_exposure).sum(axis=1)
-
-        return series_exposure
+    #     return series_exposure
 
     def array_pnl(self, universe):
         """
@@ -390,7 +387,7 @@ class Trade:
 
         Returns
         -------
-        array_exposure : numpy.array, shape (n_bars, n_orders)
+        array_pnl : numpy.array, shape (n_bars, n_orders)
 
         Examples
         --------
@@ -483,12 +480,15 @@ class Trade:
         """
         universe = self.__to_dataframe(universe)
 
-        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
-        close_bar_index = universe.index.get_indexer([self.close_bar]).item()
-        array_exposure = self.array_exposure(universe)
-        final_pnl = (
-            array_exposure[close_bar_index, :] - array_exposure[open_bar_index, :]
-        )
+        i_open = universe.index.get_indexer([self.open_bar]).item()
+        i_close = universe.index.get_indexer([self.close_bar]).item()
+
+        value = self.array_value(universe)
+        pnl = value - value[i_open]
+        pnl[:i_open] = 0
+        pnl[i_close:] = pnl[i_close]
+
+        final_pnl = pnl[-1]
 
         return final_pnl
 
