@@ -174,6 +174,7 @@ class Drawdown(Metric):
     # >>> Drawdown(rate=False).result(strategy)
     # array([0.0, 0.0, 0.0, -1.0, -2.0])
     """
+
     EPSILON = 10e-8
 
     def __init__(self, rate=False, **kwargs):
@@ -283,6 +284,7 @@ class SharpeRatio(Metric):
     -------
     sharpe_ratio : float
     """
+
     EPSILON = 10e-8
 
     def __init__(self, rate=False, n=1, risk_free_return=0.0, **kwargs):
@@ -302,7 +304,7 @@ class SharpeRatio(Metric):
         volatility = Volatility(rate=self.rate, n=self.n).result(
             strategy, init_wealth=init_wealth
         )
-        volatility = max(volatility, EPSILON)
+        volatility = max(volatility, self.EPSILON)
         result = (average_return - self.risk_free_return) / volatility
         return result
 
@@ -315,6 +317,7 @@ class TradewiseSharpeRatio(Metric):
     -------
     tradewise_sharpe_ratio : float
     """
+
     EPSILON = 10e-8
 
     def __init__(self, **kwargs):
