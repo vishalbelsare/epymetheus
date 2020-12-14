@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 import epymetheus as ep
-from epymetheus import Trade, Universe
+from epymetheus import Trade
 from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import RandomTrader
 
@@ -13,6 +13,7 @@ class TestInit:
     """
     Test initialization by function `trade`.
     """
+
     def test_shape(self):
         trade = ep.trade("A", lot=1.0)
         assert trade.asset.shape == (1,)
@@ -48,15 +49,13 @@ class TestArrayValue:
     Test `Trade._array_value()`.
     """
 
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 2, 8, 1],
-            },
-            index=range(7),
-            dtype=float,
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 2, 8, 1],
+        },
+        index=range(7),
+        dtype=float,
     )
     trade0 = ep.trade(["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
     trade1 = ep.trade(["A1", "A0"], lot=[-3, 2], open_bar=1, shut_bar=3)
@@ -106,15 +105,13 @@ class TestArrayExposure:
     Test `Trade.array_exposure()`.
     """
 
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 2, 8, 1],
-            },
-            index=range(7),
-            dtype=float,
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 2, 8, 1],
+        },
+        index=range(7),
+        dtype=float,
     )
 
     trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
@@ -164,15 +161,13 @@ class TestSeriesExposure:
     Test `Trade.series_exposure()`.
     """
 
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 2, 8, 1],
-            },
-            index=range(7),
-            dtype=float,
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 2, 8, 1],
+        },
+        index=range(7),
+        dtype=float,
     )
 
     @pytest.mark.parametrize("net", [True, False])
@@ -234,15 +229,13 @@ class TestSeriesPnl:
     Test `Trade.series_pnl()`.
     """
 
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 2, 8, 1],
-            },
-            index=range(7),
-            dtype=float,
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 2, 8, 1],
+        },
+        index=range(7),
+        dtype=float,
     )
     trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
     expected0 = [0, 0, 24, -3, -3, -3, -3]
@@ -282,15 +275,13 @@ class TestSeriesPnl:
 
 
 class TestFinalPnl:
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 2, 8, 1],
-            },
-            index=range(7),
-            dtype=float,
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 2, 8, 1],
+        },
+        index=range(7),
+        dtype=float,
     )
 
     @pytest.mark.parametrize("seed", range(10))
@@ -410,13 +401,13 @@ class TestRepr:
 # #     prices = pd.DataFrame({
 # #         'Asset0': const + make_sin(n_bars=n_bars, period=period, shift=shift)
 # #     })
-# #     universe = Universe(prices)
+# #     universe = prices
 
 # #     trade = ep.trade('Asset0', lot=1.0, )
 
 
 # # def test_execute_take():
-# #     universe = Universe(prices=pd.DataFrame({"Asset0": np.arange(100, 200)}))
+# #     universe = pd.DataFrame({"Asset0": np.arange(100, 200)})
 
 # #     trade = ep.trade("Asset0", lot=1.0, take=1.9, open_bar=1, shut_bar=5)
 # #     trade.execute(universe)
@@ -435,7 +426,7 @@ class TestRepr:
 
 
 # # def test_execute_stop():
-# #     universe = Universe(prices=pd.DataFrame({"Asset0": np.arange(100, 0, -1)}))
+# #     universe = prices=pd.DataFrame({"Asset0": np.arange(100, 0, -1)})
 
 # #     trade = ep.trade("Asset0", lot=1.0, stop=-1.9, open_bar=1, shut_bar=5)
 # #     trade.execute(universe)

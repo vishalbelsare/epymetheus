@@ -56,7 +56,7 @@ class Strategy(abc.ABC):
     - trades : array of Trade, shape (n_trades, )
     - n_trades : int
     - n_orders : int
-    - universe : Universe
+    - universe : pandas.DataFrame
     - history : History
     - transaction : Transaction
     - wealth : Wealth
@@ -123,16 +123,17 @@ class Strategy(abc.ABC):
 
     def logic(self, universe):
         """
-        Logic to generate `Trade` from `Universe`.
+        Logic to generate trades from universe.
 
         Parameters
         ----------
-        - universe : Universe
-            Universe to apply the logic.
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
 
-        Yields
+        Returns
         ------
-        trade : Trade
+        trades : iterable of trades
         """
 
     @property
@@ -178,8 +179,9 @@ class Strategy(abc.ABC):
 
         Parameters
         ----------
-        - universe : Universe
-            Universe with which self is run.
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
         - verbose : bool, default True
             Verbose mode.
 

@@ -210,7 +210,7 @@ class Trade:
 
         Parameters
         ----------
-        universe : Universe
+        universe : pandas.DataFrame
 
         Returns
         -------
@@ -220,11 +220,11 @@ class Trade:
         --------
         >>> import pandas as pd
         >>> import epymetheus as ep
-        >>> universe = ep.Universe(pd.DataFrame({
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5, 6, 7],
         ...     "A1": [2, 3, 4, 5, 6, 7, 8],
         ...     "A2": [3, 4, 5, 6, 7, 8, 9],
-        ... }, dtype=float))
+        ... }, dtype=float)
         >>> t = ep.trade("A0", open_bar=1, shut_bar=6)
         >>> t = t.execute(universe)
         >>> t.close_bar
@@ -279,14 +279,15 @@ class Trade:
 
         Examples
         --------
-        >>> from pandas import DataFrame
-        >>> from epymetheus import Universe
-        >>> universe = Universe(DataFrame({
+        >>> import pandas as pd
+        >>> import epymetheus as ep
+        ...
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
-        >>> trade = Trade(asset=["A0", "A2"], lot=[2, -3], open_bar=1, shut_bar=3)
+        ... }, dtype=float)
+        >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
         >>> trade._array_value(universe)
         array([[  2.,  -9.],
                [  4., -12.],
@@ -315,11 +316,12 @@ class Trade:
         --------
         >>> import pandas as pd
         >>> import epymetheus as ep
-        >>> universe = ep.Universe(pd.DataFrame({
+        ...
+        >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float))
+        ... }, dtype=float)
         >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
         >>> trade.array_exposure(universe)
         array([[  0.,   0.],
@@ -353,7 +355,7 @@ class Trade:
 
         Parameters
         ----------
-        - universe : Universe
+        - universe : pandas.DataFram e
         - net : bool, default True
             If True, return net exposure.
             If False, return absolute exposure.
@@ -366,6 +368,7 @@ class Trade:
         --------
         >>> import pandas as pd
         >>> import epymetheus as ep
+        ...
         >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
@@ -445,6 +448,7 @@ class Trade:
         --------
         >>> import pandas as pd
         >>> import epymetheus as ep
+        ...
         >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
@@ -478,6 +482,7 @@ class Trade:
         --------
         >>> import pandas as pd
         >>> import epymetheus as ep
+        ...
         >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],

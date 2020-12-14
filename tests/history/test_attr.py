@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from epymetheus import trade, History, Universe
+from epymetheus import trade, History
 from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import DeterminedTrader, RandomTrader
 
@@ -47,10 +47,8 @@ class TestBase:
 
 class TestColumn:
 
-    universe = Universe(
-        pd.DataFrame(
-            {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
-        )
+    universe = pd.DataFrame(
+        {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
     )
 
     trades = [

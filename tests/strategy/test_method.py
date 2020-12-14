@@ -3,7 +3,7 @@ import pytest
 import pandas as pd
 
 import epymetheus as ep
-from epymetheus import Universe, Strategy
+from epymetheus import Strategy
 from epymetheus.benchmarks import DeterminedTrader
 from epymetheus.datasets import make_randomwalk
 from epymetheus.exceptions import NoTradeError
@@ -13,22 +13,23 @@ class HardCodedStrategy(Strategy):
     """
     Yield hard-coded trades.
     """
+
     trade0 = ep.trade(
-            asset="A0",
-            lot=1.0,
-            open_bar="B0",
-            shut_bar="B1",
-            take=2.0,
-            stop=-2.0,
-        )
+        asset="A0",
+        lot=1.0,
+        open_bar="B0",
+        shut_bar="B1",
+        take=2.0,
+        stop=-2.0,
+    )
     trade1 = ep.trade(
-            asset="A1",
-            lot=1.1,
-            open_bar="B2",
-            shut_bar="B3",
-            take=2.1,
-            stop=-2.1,
-        )
+        asset="A1",
+        lot=1.1,
+        open_bar="B2",
+        shut_bar="B3",
+        take=2.1,
+        stop=-2.1,
+    )
 
     def logic(self, universe):
         yield self.trade0
@@ -51,10 +52,8 @@ class TestRun:
 
     params_verbose = [True, False]
 
-    universe = Universe(
-        prices=pd.DataFrame(
-            {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
-        )
+    universe = prices = pd.DataFrame(
+        {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
     )
 
     @pytest.mark.parametrize("verbose", params_verbose)
@@ -97,7 +96,7 @@ class TestRun:
     def test_no_trade_error(self, verbose):
         strategy = NoTradeStrategy()
         with pytest.raises(NoTradeError):
-            strategy.run(make_randomwalk(seed=42), verbose=verbose)
+            strategy.run(make_randomwalk(), verbose=verbose)
 
 
 class TestCompile:

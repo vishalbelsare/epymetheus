@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 import epymetheus as ep
-from epymetheus import Universe, Trade
+from epymetheus import Trade
 from epymetheus.exceptions import NotRunError
 from epymetheus.benchmarks import RandomTrader, DeterminedTrader
 from epymetheus.datasets import make_randomwalk
@@ -346,12 +346,10 @@ class TestSharpeRatio:
     @pytest.mark.parametrize("init_wealth", [100.0])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero(self, rate, init_wealth, n_bars):
-        universe = Universe(
-            pd.DataFrame(
-                {
-                    "A0": np.ones(n_bars, dtype=float),
-                }
-            )
+        universe = pd.DataFrame(
+            {
+                "A0": np.ones(n_bars, dtype=float),
+            }
         )
         strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
         result = self.MetricClass(rate=rate).result(strategy, init_wealth=init_wealth)
@@ -386,24 +384,20 @@ class TestExposure:
 
     MetricClass = Exposure
 
-    universe_hand = Universe(
-        pd.DataFrame(
-            {
-                "A0": [3, 1, 4, 1, 5, 9, 2],
-                "A1": [2, 7, 1, 8, 1, 8, 1],
-            }
-        )
+    universe_hand = pd.DataFrame(
+        {
+            "A0": [3, 1, 4, 1, 5, 9, 2],
+            "A1": [2, 7, 1, 8, 1, 8, 1],
+        }
     )
 
     @pytest.mark.parametrize("net", [True, False])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero_0(self, net, n_bars):
-        universe = Universe(
-            pd.DataFrame(
-                {
-                    "A0": np.zeros(n_bars, dtype=float),
-                }
-            )
+        universe = pd.DataFrame(
+            {
+                "A0": np.zeros(n_bars, dtype=float),
+            }
         )
         strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
@@ -413,12 +407,10 @@ class TestExposure:
     @pytest.mark.parametrize("net", [True, False])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero_1(self, net, n_bars):
-        universe = Universe(
-            pd.DataFrame(
-                {
-                    "A0": np.linspace(0.0, 1.0, n_bars),
-                }
-            )
+        universe = pd.DataFrame(
+            {
+                "A0": np.linspace(0.0, 1.0, n_bars),
+            }
         )
         strategy = DeterminedTrader([ep.trade("A0", lot=0.0)]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
