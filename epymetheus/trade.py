@@ -246,7 +246,26 @@ class Trade:
         >>> trade2.close_bar
         3
         """
-        self.close_bar = self.__get_close_bar(universe)
+        # Compute close_bar
+        stop_bar = self.__stop_bar(universe)
+
+        if self.take is None and self.stop is None:
+            close_bar = stop_bar
+        else:
+            series_pnl = self.series_pnl(universe)
+
+            signal_take = series_pnl >= (self.take or np.inf)
+            signal_stop = series_pnl <= (self.stop or -np.inf)
+
+            close_bar_index = catch_first_index(np.logical_or(signal_take, signal_stop))
+            stop_bar_index = universe.get_bar_indexer(stop_bar)
+
+            if close_bar_index == -1 or close_bar_index > stop_bar_index:
+                close_bar = stop_bar
+            else:
+                close_bar = universe.bars[close_bar_index]
+
+        self.close_bar = close_bar
         self._is_executed = True
 
         return self
@@ -457,34 +476,6 @@ class Trade:
         )
 
         return final_pnl
-
-    def __get_close_bar(self, universe):
-        """
-        Used in self.execute.
-
-        Returns
-        -------
-        close_bar
-        """
-        stop_bar = self.__stop_bar(universe)
-
-        if self.take is None and self.stop is None:
-            close_bar = stop_bar
-        else:
-            series_pnl = self.series_pnl(universe)
-
-            signal_take = series_pnl >= (self.take or np.inf)
-            signal_stop = series_pnl <= (self.stop or -np.inf)
-
-            close_bar_index = catch_first_index(np.logical_or(signal_take, signal_stop))
-            stop_bar_index = universe.get_bar_indexer(stop_bar)
-
-            if close_bar_index == -1 or close_bar_index > stop_bar_index:
-                close_bar = stop_bar
-            else:
-                close_bar = universe.bars[close_bar_index]
-
-        return close_bar
 
     def __stop_bar(self, universe):
         if self.is_executed:
