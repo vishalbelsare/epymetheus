@@ -43,8 +43,18 @@ def trade(
     >>> trade(["AAPL", "AMZN"])
     trade(['AAPL' 'AMZN'], lot=[1. 1.])
 
-    >>> [1.0, 2.0] * trade(["AAPL", "AMZN"])
-    trade(['AAPL' 'AMZN'], lot=[1. 2.])
+    >>> [1.0, -2.0] * trade(["AAPL", "AMZN"])
+    trade(['AAPL' 'AMZN'], lot=[ 1. -2.])
+
+    >>> from datetime import date
+    >>> trade("AAPL", open_bar=date(2020, 1, 1))
+    trade(['AAPL'], lot=[1.], open_bar=2020-01-01)
+
+    >>> trade("AAPL", open_bar=date(2020, 1, 1), shut_bar=date(2020, 1, 31))
+    trade(['AAPL'], lot=[1.], open_bar=2020-01-01, shut_bar=2020-01-31)
+
+    >>> trade("AAPL", take=200.0, stop=-100.0)
+    trade(['AAPL'], lot=[1.], take=200.0, stop=-100.0)
     """
     return Trade._trade(
         asset=asset,
@@ -80,36 +90,6 @@ class Trade:
     - close_bar : object
         Bar to close the trade.
         It is set by the method `self.execute`.
-
-    Examples
-    --------
-    A long position:
-    >>> import datetime
-    >>> od = datetime.date(2018, 1, 1)
-    >>> cd = datetime.date(2018, 2, 1)
-    >>> t = trade(
-    ...     asset='AAPL',
-    ...     lot=2,
-    ...     open_bar=datetime.date(2020, 1, 1),
-    ...     shut_bar=datetime.date(2020, 2, 1),
-    ... )
-
-    A short position:
-    >>> import datetime
-    >>> t = -2 * Trade(
-    ...     asset='AAPL',
-    ...     open_bar=datetime.date(2020, 1, 1),
-    ...     shut_bar=datetime.date(2020, 2, 1),
-    ... )
-
-    A long-short position:
-    >>> import datetime
-    >>> t = Trade(
-    ...     asset=['AAPL', 'MSFT'],
-    ...     lot=[1, -2],
-    ...     open_bar=datetime.date(2020, 1, 1),
-    ...     shut_bar=datetime.date(2020, 2, 1),
-    ... )
     """
 
     def __init__(
