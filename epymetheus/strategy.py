@@ -2,10 +2,12 @@ import abc
 from inspect import cleandoc
 from time import time
 
+import numpy as np
+import pandas as pd
+
 from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
 from epymetheus.history import History
-from epymetheus.wealth import Wealth
 
 
 def create_strategy(logic_func, **params):
@@ -59,7 +61,6 @@ class Strategy(abc.ABC):
     - universe : pandas.DataFrame
     - history : History
     - transaction : Transaction
-    - wealth : Wealth
 
     Examples
     --------
@@ -87,10 +88,6 @@ class Strategy(abc.ABC):
     >>> from epymetheus.datasets import make_randomwalk
     >>> universe = make_randomwalk()
     >>> _ = my_strategy.run(universe, verbose=False)
-
-    Todo
-    ----
-    - dump trades in a light data structure
     """
 
     def __init__(self, logic_func=None, name=None, description=None, params=None):
@@ -169,9 +166,31 @@ class Strategy(abc.ABC):
     def history(self):
         return History(strategy=self)
 
-    @property
-    def wealth(self):
-        return Wealth(strategy=self)
+    def wealth(self, universe=None):
+        """
+        Return `pandas.Series` of wealth.
+
+        Returns
+        -------
+        wealth : pandas.Series
+            Series of wealth.
+        """
+        universe = universe or self.universe
+
+        wealth = np.zeros_like(universe.iloc[:, 0])
+        for t in self.trades:
+            i_open = universe.index.get_indexer([t.open_bar]).item()
+            i_open = i_open if i_open != -1 else 0
+            i_close = universe.index.get_loc(t.close_bar)
+
+            value = t.array_value(universe).sum(axis=1)
+            pnl = value - value[i_open]
+            pnl[:i_open] = 0
+            pnl[i_close:] = pnl[i_close]
+
+            wealth += pnl
+
+        return pd.Series(wealth, index=universe.index)
 
     def run(self, universe, verbose=True):
         """

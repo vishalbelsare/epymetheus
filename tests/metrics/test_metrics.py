@@ -131,7 +131,7 @@ class TestReturn:
         """
         m = self.MetricClass(rate=rate)
         strategy = RandomTrader(seed=seed).run(make_randomwalk())
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
         assert np.allclose(result, result_from_wealth)
@@ -181,7 +181,7 @@ class TestAverageReturn:
         """
         m = self.MetricClass(rate=rate, n=n)
         strategy = RandomTrader(seed=42).run(make_randomwalk())
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
         assert np.allclose(result, result_from_wealth)
@@ -219,7 +219,7 @@ class TestFinalWealth:
         m = self.MetricClass()
         strategy = RandomTrader(seed=seed).run(make_randomwalk())
         result0 = m.result(strategy)
-        result1 = m._result_from_wealth(strategy.wealth.wealth)
+        result1 = m._result_from_wealth(strategy.wealth().values)
         assert result0 == result1
 
 
@@ -272,7 +272,7 @@ class TestDrawdown:
         strategy = RandomTrader(seed=seed).run(make_randomwalk())
 
         result0 = m.result(strategy)
-        result1 = m._result_from_wealth(strategy.wealth.wealth)
+        result1 = m._result_from_wealth(strategy.wealth().values)
 
         assert np.equal(result0, result1).all()
 

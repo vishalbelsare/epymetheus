@@ -257,8 +257,8 @@ class Trade:
             i_open = universe.index.get_indexer([open_bar]).item()
             i_shut = universe.index.get_indexer([shut_bar]).item()
 
-            series_value = self._array_value(universe).sum(axis=1)
-            pnl = series_value - series_value[i_open]
+            value = self.array_value(universe).sum(axis=1)
+            pnl = value - value[i_open]
             pnl[:i_open] = 0
 
             signal = np.logical_or(
@@ -275,7 +275,7 @@ class Trade:
 
         return self
 
-    def _array_value(self, universe):
+    def array_value(self, universe):
         """
         Return value of self for each asset.
 
@@ -295,7 +295,7 @@ class Trade:
         ...     "A2": [3, 4, 5, 6, 7],
         ... })
         >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
-        >>> trade._array_value(universe)
+        >>> trade.array_value(universe)
         array([[  2.,  -9.],
                [  4., -12.],
                [  6., -15.],
@@ -334,7 +334,7 @@ class Trade:
         """
         universe = self.__to_dataframe(universe)
 
-        array_value = self._array_value(universe)
+        array_value = self.array_value(universe)
 
         stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
 
@@ -416,7 +416,7 @@ class Trade:
         """
         universe = self.__to_dataframe(universe)
 
-        array_value = self._array_value(universe)
+        array_value = self.array_value(universe)
 
         stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
 

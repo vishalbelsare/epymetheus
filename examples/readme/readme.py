@@ -72,6 +72,7 @@ if __name__ == "__main__":
     print(">>> universe.head()")
     print_as_comment(universe.head())
 
+    print(">>> my_strategy.run(universe)")
     my_strategy.run(universe)
 
     # ---

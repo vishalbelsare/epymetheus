@@ -46,7 +46,7 @@ class TestExecute:
 
 class TestArrayValue:
     """
-    Test `Trade._array_value()`.
+    Test `Trade.array_value()`.
     """
 
     universe_hand = pd.DataFrame(
@@ -67,12 +67,12 @@ class TestArrayValue:
         [(trade0, expected0), (trade1, expected1)],
     )
     def test_value_hand(self, trade, expected):
-        result = trade._array_value(universe=self.universe_hand)
+        result = trade.array_value(universe=self.universe_hand)
         assert np.allclose(result, expected)
 
     def test_value_zero(self):
         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], open_bar=1, shut_bar=3)
-        result = trade._array_value(self.universe_hand)
+        result = trade.array_value(self.universe_hand)
         expected = np.zeros((len(self.universe_hand.index), 2))
         assert np.allclose(result, expected)
 
@@ -83,9 +83,9 @@ class TestArrayValue:
         trade0 = ep.trade("A0", lot=lot0, open_bar=1, shut_bar=3)
         trade1 = ep.trade("A0", lot=lot1, open_bar=1, shut_bar=3)
         tradeA = ep.trade("A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
-        result0 = trade0._array_value(self.universe_hand)
-        result1 = trade1._array_value(self.universe_hand)
-        resultA = tradeA._array_value(self.universe_hand)
+        result0 = trade0.array_value(self.universe_hand)
+        result1 = trade1.array_value(self.universe_hand)
+        resultA = tradeA.array_value(self.universe_hand)
         assert np.allclose(result0 + result1, resultA)
 
     @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
@@ -96,8 +96,8 @@ class TestArrayValue:
         trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
         tradeA = a * trade0
         print(trade0, tradeA)
-        result0 = trade0._array_value(universe)
-        resultA = tradeA._array_value(universe)
+        result0 = trade0.array_value(universe)
+        resultA = tradeA.array_value(universe)
         assert np.allclose(a * result0, resultA)
 
 

@@ -83,7 +83,7 @@ class Return(Metric):
         return result
 
     def result(self, strategy, init_wealth=0.0):
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -119,7 +119,7 @@ class AverageReturn(Metric):
         return result
 
     def result(self, strategy, init_wealth=0.0):
-        series_wealth = strategy.wealth.wealth + init_wealth
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -146,7 +146,7 @@ class FinalWealth(Metric):
         return series_wealth[-1]
 
     def result(self, strategy, init_wealth=0.0):
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -195,7 +195,7 @@ class Drawdown(Metric):
         return result
 
     def result(self, strategy, init_wealth=0.0):
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -264,7 +264,7 @@ class Volatility(Metric):
         return result
 
     def result(self, strategy, init_wealth=0.0):
-        series_wealth = init_wealth + strategy.wealth.wealth
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
