@@ -82,12 +82,14 @@ if __name__ == "__main__":
     print(">>> df_history.head()")
     print_as_comment(df_history.head())
 
+    print(sum(df_history.pnl))
+
     # ---
 
-    df_wealth = my_strategy.wealth.to_dataframe()
+    df_wealth = my_strategy.wealth()
 
-    print(">>> my_strategy.wealth.to_dataframe().head()")
-    print_as_comment(my_strategy.wealth.to_dataframe().head())
+    print(">>> my_strategy.wealth().head()")
+    print_as_comment(my_strategy.wealth().head())
 
     plt.figure(figsize=(16, 4))
     plt.plot(df_wealth, linewidth=1)

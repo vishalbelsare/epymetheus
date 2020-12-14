@@ -112,8 +112,6 @@ Now your strategy is readily backtested with any universe.
 from epymetheus.datasets import fetch_usstocks
 
 universe = fetch_usstocks(n_assets=10)
-type(universe)
-# <class 'pandas.core.frame.DataFrame'>
 universe
 #                  AAPL        MSFT         AMZN   BRK-A         JPM         JNJ         WMT        BAC          PG        XOM
 # 2000-01-01   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
