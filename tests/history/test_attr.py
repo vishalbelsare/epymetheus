@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from epymetheus import Trade, History, Universe
+from epymetheus import trade, History, Universe
 from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import DeterminedTrader, RandomTrader
 
@@ -54,7 +54,7 @@ class TestColumn:
     )
 
     trades = [
-        Trade(
+        trade(
             asset=["A0", "A1"],
             lot=[1, 2],
             open_bar="B0",
@@ -62,7 +62,7 @@ class TestColumn:
             take=1.0,
             stop=-1.0,
         ),
-        Trade(
+        trade(
             asset=["A2", "A3"],
             lot=[3, 4],
             open_bar="B1",

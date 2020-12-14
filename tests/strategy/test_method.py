@@ -2,7 +2,8 @@ import pytest
 
 import pandas as pd
 
-from epymetheus import Trade, Universe, Strategy
+import epymetheus as ep
+from epymetheus import Universe, Strategy
 from epymetheus.benchmarks import DeterminedTrader
 from epymetheus.datasets import make_randomwalk
 from epymetheus.exceptions import NoTradeError
@@ -12,13 +13,21 @@ class HardCodedStrategy(Strategy):
     """
     Yield hard-coded trades.
     """
-
-    def __init__(self):
-        self.trade0 = Trade(
-            asset="A0", lot=1.0, open_bar="B0", shut_bar="B1", take=2.0, stop=-2.0
+    trade0 = ep.trade(
+            asset="A0",
+            lot=1.0,
+            open_bar="B0",
+            shut_bar="B1",
+            take=2.0,
+            stop=-2.0,
         )
-        self.trade1 = Trade(
-            asset="A1", lot=1.1, open_bar="B2", shut_bar="B3", take=2.1, stop=-2.1
+    trade1 = ep.trade(
+            asset="A1",
+            lot=1.1,
+            open_bar="B2",
+            shut_bar="B3",
+            take=2.1,
+            stop=-2.1,
         )
 
     def logic(self, universe):
@@ -66,8 +75,8 @@ class TestRun:
         """
         strategy = HardCodedStrategy().run(self.universe, verbose=verbose)
         expected = [
-            trade.execute(self.universe).close_bar
-            for trade in (strategy.trade0, strategy.trade1)
+            t.execute(self.universe).close_bar
+            for t in (strategy.trade0, strategy.trade1)
         ]
         result = [trade.close_bar for trade in strategy.trades]
         assert result == expected

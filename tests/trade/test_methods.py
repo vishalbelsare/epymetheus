@@ -81,9 +81,9 @@ class TestArrayValue:
     def test_linearity_add(self, seed):
         np.random.seed(seed)
         lot0, lot1 = np.random.random(2)
-        trade0 = ep.trade("A", lot=lot0, open_bar=1, shut_bar=3)
-        trade1 = ep.trade("A", lot=lot1, open_bar=1, shut_bar=3)
-        tradeA = ep.trade("A", lot=lot0 + lot1, open_bar=1, shut_bar=3)
+        trade0 = ep.trade("A0", lot=lot0, open_bar=1, shut_bar=3)
+        trade1 = ep.trade("A0", lot=lot1, open_bar=1, shut_bar=3)
+        tradeA = ep.trade("A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
         result0 = trade0._array_value(self.universe_hand)
         result1 = trade1._array_value(self.universe_hand)
         resultA = tradeA._array_value(self.universe_hand)

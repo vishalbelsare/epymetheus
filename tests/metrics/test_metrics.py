@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
+import epymetheus as ep
 from epymetheus import Universe, Trade
 from epymetheus.exceptions import NotRunError
 from epymetheus.benchmarks import RandomTrader, DeterminedTrader
@@ -352,7 +353,7 @@ class TestSharpeRatio:
                 }
             )
         )
-        strategy = DeterminedTrader([Trade("A0")]).run(universe)
+        strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
         result = self.MetricClass(rate=rate).result(strategy, init_wealth=init_wealth)
         expected = 0
         assert np.allclose(result, expected)
@@ -404,7 +405,7 @@ class TestExposure:
                 }
             )
         )
-        strategy = DeterminedTrader([Trade("A0")]).run(universe)
+        strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
         assert np.allclose(result, expected)
@@ -419,7 +420,7 @@ class TestExposure:
                 }
             )
         )
-        strategy = DeterminedTrader([Trade("A0", lot=0.0)]).run(universe)
+        strategy = DeterminedTrader([ep.trade("A0", lot=0.0)]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
         assert np.allclose(result, expected)
@@ -427,8 +428,8 @@ class TestExposure:
     @pytest.mark.parametrize("net", [True, False])
     def test_hand(self, net):
         universe = self.universe_hand
-        trade0 = Trade("A0", lot=2.0, open_bar=1, shut_bar=5)
-        trade1 = Trade("A1", lot=-3.0, open_bar=2, shut_bar=4)
+        trade0 = ep.trade("A0", lot=2.0, open_bar=1, shut_bar=5)
+        trade1 = ep.trade("A1", lot=-3.0, open_bar=2, shut_bar=4)
         strategy = DeterminedTrader([trade0, trade1]).run(universe)
         result = Exposure(net=net).result(strategy)
         if net:
