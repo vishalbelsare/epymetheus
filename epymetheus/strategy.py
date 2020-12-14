@@ -160,11 +160,6 @@ class Strategy(abc.ABC):
         return description
 
     @property
-    def is_run(self):
-        # Don't use "__is_run"; it cannot be accessed by getattr.
-        return getattr(self, "_is_run", False)
-
-    @property
     def n_trades(self):
         return len(self.trades)
 
@@ -227,7 +222,6 @@ class Strategy(abc.ABC):
             print(f"Done. (Runtime: {_time:.4f} sec)")
 
         self.trades = trades
-        self._is_run = True
         return self
 
     def get_params(self):
@@ -274,7 +268,7 @@ class Strategy(abc.ABC):
         - metric : Metric or str
             Metric to evaluate.
         """
-        if not self.is_run:
+        if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
         return metric.result(self)
