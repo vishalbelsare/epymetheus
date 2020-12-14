@@ -16,22 +16,34 @@ def trade(
     """
     Initialize `Trade`.
 
+    Parameters
+    ----------
+    - asset : str or array of str
+        Name of assets.
+    - open_bar : object or None, default None
+        Bar to open the trade.
+    - shut_bar : object or None, default None
+        Bar to enforce the trade to close.
+    - lot : float, default 1.0
+        Lot to trade in unit of share.
+    - take : float > 0 or None, default None
+        Threshold of profit-take.
+    - stop : float < 0 or None, default None
+        Threshold of stop-loss.
+
     Returns
     -------
     trade : Trade
 
     Examples
     --------
-    >>> t = trade("AAPL")
-    >>> t
+    >>> trade("AAPL")
     trade(['AAPL'], lot=[1.])
 
-    >>> t = trade(["AAPL", "AMZN"])
-    >>> t
+    >>> trade(["AAPL", "AMZN"])
     trade(['AAPL' 'AMZN'], lot=[1. 1.])
 
-    >>> t = trade(["AAPL", "AMZN"], lot=[1.0, 2.0])
-    >>> t
+    >>> [1.0, 2.0] * trade(["AAPL", "AMZN"])
     trade(['AAPL' 'AMZN'], lot=[1. 2.])
     """
     return Trade._trade(
