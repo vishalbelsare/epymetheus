@@ -1,6 +1,5 @@
 import pandas as pd
 
-from epymetheus import Universe
 from epymetheus.stochastic import generate_geometric_brownian
 
 
@@ -14,11 +13,11 @@ def make_randomwalk(
     name="RandomWalk",
     bars=None,
     assets=None,
-    seed=None,
 ):
     """
-    Return Universe whose prices are random-walks.
+    Return `pandas.DataFrame` of random-walking prices (geometric Brownian motion).
     Daily returns follow log-normal distribution.
+    Seed can be set by `np.random.seed(...)`.
 
     Parameters
     ----------
@@ -32,13 +31,14 @@ def make_randomwalk(
 
     Returns
     -------
-    Universe
+    universe : pandas.DataFrame
+        DataFrame with random-walking prices.
 
     Examples
     --------
     >>> import numpy as np
     >>> np.random.seed(42)
-    >>> make_randomwalk(10, 3).prices
+    >>> make_randomwalk(10, 3)
               0         1         2
     0  1.000000  1.000000  1.000000
     1  1.004929  0.998568  1.006448
@@ -59,10 +59,6 @@ def make_randomwalk(
         dt=dt,
         drift=drift,
     )
-
-    bars = bars or list(range(n_bars))
-    assets = assets or [str(i) for i in range(n_assets)]
-
-    prices = pd.DataFrame(data, index=bars, columns=assets)
-
-    return Universe(prices, name=name)
+    index = bars or list(range(n_bars))
+    columns = assets or [str(i) for i in range(n_assets)]
+    return pd.DataFrame(data, index=index, columns=columns)

@@ -4,8 +4,6 @@ from pathlib import Path
 import pandas as pd
 from pandas_datareader import DataReader
 
-from epymetheus import Universe
-
 from ._utils import fill_and_cut
 
 module_path = Path(dirname(__file__))
@@ -17,9 +15,10 @@ def fetch_usstocks(
     n_assets=10,
     column="Adj Close",
     verbose=True,
-):
+    fill=True,
+) -> pd.DataFrame:
     """
-    Return Universe of US stocks.
+    Return `pandas.DataFrame` of historical prices of US stocks.
 
     Parameters
     ----------
@@ -29,7 +28,8 @@ def fetch_usstocks(
 
     Returns
     -------
-    universe : Universe
+    universe : pandas.DataFrame
+        Historical prices of US stocks.
     """
     begin_date = pd.Timestamp(begin_date)
     end_date = pd.Timestamp(end_date)
@@ -40,19 +40,20 @@ def fetch_usstocks(
     if n_assets > len(tickers):
         raise ValueError("n_assets should be <=", len(tickers))
 
-    prices = pd.DataFrame(
-        {
-            ticker: fill_and_cut(
-                DataReader(
-                    name=ticker,
-                    data_source="yahoo",
-                    start=begin_date - pd.Timedelta(days=10),
-                    end=end_date,
-                )[column],
-                begin_date=begin_date,
-            )
-            for ticker in tickers[:n_assets]
-        }
-    )
+    prices_dict = {
+        ticker: DataReader(
+            name=ticker,
+            data_source="yahoo",
+            start=begin_date - pd.Timedelta(days=10),
+            end=end_date,
+        )[column]
+        for ticker in tickers[:n_assets]
+    }
 
-    return Universe(prices)
+    if fill:
+        prices_dict = {
+            k: fill_and_cut(price, begin_date=begin_date)
+            for k, price in prices_dict.items()
+        }
+
+    return pd.DataFrame(prices_dict)

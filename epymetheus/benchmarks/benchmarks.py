@@ -66,11 +66,11 @@ class RandomTrader(Strategy):
         for _ in range(self.__n_trades):
             n_orders = np.random.randint(1, self.max_n_orders + 1, size=1)[0]
 
-            asset = random.sample(list(universe.assets), n_orders)
+            asset = random.sample(list(universe.columns), n_orders)
             lot = (self.max_lot - self.min_lot) * np.random.rand(
                 n_orders
             ) - self.min_lot
-            open_bar, shut_bar = sorted(random.sample(list(universe.bars), 2))
+            open_bar, shut_bar = sorted(random.sample(list(universe.index), 2))
 
             yield trade(asset, lot=lot, open_bar=open_bar, shut_bar=shut_bar)
 
@@ -93,6 +93,6 @@ class BuyAndHold(Strategy):
         asset = np.array(list(self.weight.keys()))
         lot = (
             np.array(list(self.weight.values()))
-            / universe.prices.loc[:, self.weight.keys()].iloc[0, :].values
+            / universe.loc[:, self.weight.keys()].iloc[0, :].values
         )
-        yield trade(asset, lot=lot, open_bar=universe.bars[0])
+        yield trade(asset, lot=lot, open_bar=universe.index[0])

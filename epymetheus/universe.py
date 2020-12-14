@@ -3,6 +3,9 @@ import numpy as np
 
 class Universe:
     """
+    DEPRECATED
+        You can just use `pandas.DataFrame` instead of `Universe(dataframe)` !
+
     Store historical prices of multiple assets.
 
     Parameters
@@ -22,10 +25,6 @@ class Universe:
         Equal to `len(self.bars)`.
     - n_assets : int
         Equal to `len(self.assets)`.
-
-    Examples
-    --------
-    >>> # TODO
     """
 
     def __init__(self, prices, name=None):
