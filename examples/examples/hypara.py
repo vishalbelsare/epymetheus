@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     import epymetheus as ep
 
-    def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
+    def dumb_strategy(universe: pd.DataFrame, profit_take=20, stop_loss=-10):
         """
         Buy the cheapest stock every month with my allowance.
 
@@ -36,24 +36,27 @@ if __name__ == "__main__":
             Trade object.
         """
         # I get allowance on the first business day of each month
-        allowance = 100.0
+        allowance = 100
         allowance_dates = pd.date_range(
-            universe.prices.index[0], universe.prices.index[-1], freq="BMS"
+            universe.index[0], universe.index[-1], freq="BMS"
         )
 
+        trades = []
         for date in allowance_dates:
-            # Find the cheapest stock
-            cheapest_stock = universe.prices.loc[date].idxmin()
+            cheapest_stock = universe.loc[date].idxmin()
+
             # Find the maximum number of shares that I can buy with my allowance
-            n_shares = allowance // universe.prices.at[date, cheapest_stock]
-            # Trade!
+            n_shares = allowance // universe.at[date, cheapest_stock]
+
             trade = n_shares * ep.trade(
                 cheapest_stock,
                 open_bar=date,
                 take=profit_take,
                 stop=stop_loss,
             )
-            yield trade
+            trades.append(trade)
+
+        return trades
 
     from epymetheus.datasets import fetch_usstocks
     from epymetheus.metrics import FinalWealth

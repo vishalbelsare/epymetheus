@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     import epymetheus as ep
 
-    def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
+    def dumb_strategy(universe: pd.DataFrame, profit_take=20, stop_loss=-10):
         """
         Buy the cheapest stock every month with my allowance.
 
@@ -36,26 +36,27 @@ if __name__ == "__main__":
             Trade object.
         """
         # I get allowance on the first business day of each month
-        allowance = 100.0
+        allowance = 100
         allowance_dates = pd.date_range(
-            universe.prices.index[0], universe.prices.index[-1], freq="BMS"
+            universe.index[0], universe.index[-1], freq="BMS"
         )
 
+        trades = []
         for date in allowance_dates:
-            # Find the cheapest stock
-            cheapest_stock = universe.prices.loc[date].idxmin()
+            cheapest_stock = universe.loc[date].idxmin()
 
             # Find the maximum number of shares that I can buy with my allowance
-            n_shares = allowance // universe.prices.at[date, cheapest_stock]
+            n_shares = allowance // universe.at[date, cheapest_stock]
 
-            # Trade!
             trade = n_shares * ep.trade(
                 cheapest_stock,
                 open_bar=date,
                 take=profit_take,
                 stop=stop_loss,
             )
-            yield trade
+            trades.append(trade)
+
+        return trades
 
     # ---
 
@@ -66,8 +67,10 @@ if __name__ == "__main__":
     from epymetheus.datasets import fetch_usstocks
 
     universe = fetch_usstocks()
-    print(">>> universe.prices.head()")
-    print_as_comment(universe.prices.head())
+    print(">>> type(universe)")
+    print_as_comment(type(universe))
+    print(">>> universe.head()")
+    print_as_comment(universe.head())
 
     my_strategy.run(universe)
 
@@ -106,14 +109,14 @@ if __name__ == "__main__":
     sharpe_ratio = my_strategy.score(SharpeRatio())
 
     plt.figure(figsize=(16, 4))
-    plt.plot(pd.Series(drawdown, index=universe.prices.index), linewidth=1)
+    plt.plot(pd.Series(drawdown, index=universe.index), linewidth=1)
     plt.xlabel("date")
     plt.ylabel("drawdown [USD]")
     plt.title("Drawdown")
     plt.savefig("drawdown.png", bbox_inches="tight", pad_inches=0.1)
 
     plt.figure(figsize=(16, 4))
-    plt.plot(pd.Series(net_exposure, index=universe.prices.index), linewidth=1)
+    plt.plot(pd.Series(net_exposure, index=universe.index), linewidth=1)
     plt.xlabel("date")
     plt.ylabel("net exposure [USD]")
     plt.title("Net exposure")
