@@ -3,15 +3,6 @@ from functools import reduce
 
 import numpy as np
 
-from epymetheus.utils.constants import EPSILON
-
-# TODO
-# - sortino
-# - max_underwater
-# - Factor coefficients
-# - alpha
-# - beta
-
 
 def _metric_from_name(name, **kwargs):
     """
@@ -183,6 +174,7 @@ class Drawdown(Metric):
     # >>> Drawdown(rate=False).result(strategy)
     # array([0.0, 0.0, 0.0, -1.0, -2.0])
     """
+    EPSILON = 10e-8
 
     def __init__(self, rate=False, **kwargs):
         super().__init__(**kwargs)
@@ -197,7 +189,7 @@ class Drawdown(Metric):
         result = series_wealth - cummax
 
         if self.rate:
-            result /= cummax + EPSILON
+            result /= cummax + self.EPSILON
 
         return result
 
@@ -291,6 +283,7 @@ class SharpeRatio(Metric):
     -------
     sharpe_ratio : float
     """
+    EPSILON = 10e-8
 
     def __init__(self, rate=False, n=1, risk_free_return=0.0, **kwargs):
         super().__init__(**kwargs)
@@ -322,6 +315,7 @@ class TradewiseSharpeRatio(Metric):
     -------
     tradewise_sharpe_ratio : float
     """
+    EPSILON = 10e-8
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -334,7 +328,7 @@ class TradewiseSharpeRatio(Metric):
         array_pnl = strategy.history.to_dataframe().groupby("trade_id").agg(sum)["pnl"]
         avg_pnl = np.mean(array_pnl)
         std_pnl = np.std(array_pnl)  # TODO parameter ddof
-        result = avg_pnl / max(std_pnl, EPSILON)
+        result = avg_pnl / max(std_pnl, self.EPSILON)
 
         return result
 
