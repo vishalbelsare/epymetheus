@@ -138,11 +138,6 @@ class Trade:
         )
 
     @property
-    def is_executed(self):
-        # Don't use "__is_executed"; it cannot be accessed by getattr.
-        return getattr(self, "_is_executed", False)
-
-    @property
     def array_asset(self):
         """
         Return asset as `numpy.array`.
@@ -271,7 +266,6 @@ class Trade:
             close_bar = universe.index[i_close]
 
         self.close_bar = close_bar
-        self._is_executed = True
 
         return self
 
