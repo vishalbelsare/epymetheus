@@ -232,7 +232,9 @@ class MaxDrawdown(Metric):
         return "max_drawdown"
 
     def result(self, strategy, init_wealth=0.0):
-        return np.min(Drawdown(rate=self.rate).result(strategy, init_wealth=init_wealth))
+        return np.min(
+            Drawdown(rate=self.rate).result(strategy, init_wealth=init_wealth)
+        )
 
 
 class Volatility(Metric):
@@ -301,8 +303,12 @@ class SharpeRatio(Metric):
         return "sharpe_ratio"
 
     def result(self, strategy, init_wealth=0.0):
-        average_return = AverageReturn(rate=self.rate, n=self.n).result(strategy, init_wealth=init_wealth)
-        volatility = Volatility(rate=self.rate, n=self.n).result(strategy, init_wealth=init_wealth)
+        average_return = AverageReturn(rate=self.rate, n=self.n).result(
+            strategy, init_wealth=init_wealth
+        )
+        volatility = Volatility(rate=self.rate, n=self.n).result(
+            strategy, init_wealth=init_wealth
+        )
         volatility = max(volatility, EPSILON)
         result = (average_return - self.risk_free_return) / volatility
         return result
