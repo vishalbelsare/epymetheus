@@ -34,7 +34,7 @@ def trade(
     >>> t
     trade(['AAPL' 'AMZN'], lot=[1. 2.])
     """
-    return Trade.trade(
+    return Trade._trade(
         asset=asset,
         lot=lot,
         open_bar=open_bar,
@@ -117,7 +117,7 @@ class Trade:
         self.stop = stop
 
     @classmethod
-    def trade(
+    def _trade(
         cls,
         asset,
         lot=1.0,
