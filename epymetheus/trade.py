@@ -225,14 +225,17 @@ class Trade:
         ...     "A1": [2, 3, 4, 5, 6, 7, 8],
         ...     "A2": [3, 4, 5, 6, 7, 8, 9],
         ... }, dtype=float)
+
         >>> t = ep.trade("A0", open_bar=1, shut_bar=6)
         >>> t = t.execute(universe)
         >>> t.close_bar
         6
+
         >>> t = ep.trade("A0", open_bar=1, shut_bar=6, take=2)
         >>> t = t.execute(universe)
         >>> t.close_bar
         3
+
         >>> t = -ep.trade(asset="A0", open_bar=1, shut_bar=6, stop=-2)
         >>> t = t.execute(universe)
         >>> t.close_bar
@@ -245,24 +248,29 @@ class Trade:
             return self
 
         # Compute close_bar
-        close = universe.index[-1] if self.shut_bar is None else self.shut_bar
+        open_bar = universe.index[0] if self.open_bar is None else self.open_bar
+        shut_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
+
+        close_bar = shut_bar
 
         if (self.take is not None) or (self.stop is not None):
-            series_pnl = self.series_pnl(universe)
+            i_open = universe.index.get_indexer([open_bar]).item()
+            i_shut = universe.index.get_indexer([shut_bar]).item()
+
+            series_value = self._array_value(universe).sum(axis=1)
+            pnl = series_value - series_value[i_open]
+            pnl[:i_open] = 0
 
             signal = np.logical_or(
-                series_pnl >= (self.take or +np.inf),
-                series_pnl <= (self.stop or -np.inf),
+                pnl >= (self.take or np.inf),
+                pnl <= (self.stop or -np.inf),
             )
-            index_signal = np.searchsorted(signal, True)
-            index_close = universe.index.get_indexer([close]).item()
-            index_close %= len(universe.index)  # If -1 (not found), len(universe.index)
+            i_signal = np.searchsorted(signal, True)
 
-            index_close = min(index_close, index_signal)
+            i_close = min(i_shut, i_signal)
+            close_bar = universe.index[i_close]
 
-            close = universe.index[index_close]
-
-        self.close_bar = close
+        self.close_bar = close_bar
         self._is_executed = True
 
         return self
@@ -274,6 +282,7 @@ class Trade:
         Returns
         -------
         array_value : numpy.array, shape (n_bars, n_orders)
+            Array of values.
 
         Examples
         --------
@@ -284,7 +293,7 @@ class Trade:
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float)
+        ... })
         >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
         >>> trade._array_value(universe)
         array([[  2.,  -9.],
@@ -294,10 +303,7 @@ class Trade:
                [ 10., -21.]])
         """
         universe = self.__to_dataframe(universe)
-
-        # (n_assets, ) * (n_bars, n_assets) -> (n_bars, n_orders)
         array_value = self.lot * universe.loc[:, self.asset].values
-
         return array_value
 
     def array_exposure(self, universe):
@@ -367,7 +373,7 @@ class Trade:
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float)
+        ... })
         >>> t = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
         >>> t.series_exposure(universe, net=True)
         array([  0.,  -8.,  -9., -10.,   0.])
@@ -399,7 +405,7 @@ class Trade:
         >>> universe = pd.DataFrame({
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [3, 4, 5, 6, 7],
-        ... }, dtype=float)
+        ... })
         >>> trade = [2, -3] * ep.trade(["A0", "A1"], open_bar=1, shut_bar=3)
         >>> trade.array_pnl(universe)
         array([[ 0.,  0.],
@@ -443,11 +449,11 @@ class Trade:
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
-        ... }, dtype=float)
+        ... })
         >>> t = ep.trade("A0", lot=1, open_bar=1, shut_bar=3)
         >>> t = t.execute(universe)
         >>> t.series_pnl(universe)
-        array([0., 0., 1., 2., 2.])
+        array([0, 0, 1, 2, 2])
         """
         universe = self.__to_dataframe(universe)
 
