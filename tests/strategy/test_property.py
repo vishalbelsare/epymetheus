@@ -2,7 +2,7 @@ import pytest  # noqa: F401
 
 import pandas as pd
 
-from epymetheus import Strategy, Universe, Trade
+from epymetheus import Strategy, Trade
 
 
 class SampleStrategy(Strategy):
@@ -56,18 +56,18 @@ class TestDescription:
         assert strategy.description is None
 
 
-class TestIsRun:
-    """
-    Test `Strategy.is_run`.
-    """
+# class TestIsRun:
+#     """
+#     Test `Strategy.is_run`.
+#     """
 
-    universe = Universe(pd.DataFrame({f"A{i}": range(10) for i in range(4)}))
+#     universe = pd.DataFrame({f"A{i}": range(10) for i in range(4)})
 
-    def test_value(self):
-        strategy = SampleStrategy()
-        assert strategy.is_run == False
-        strategy.run(self.universe)
-        assert strategy.is_run == True
+#     def test_value(self):
+#         strategy = SampleStrategy()
+#         assert strategy.is_run == False
+#         strategy.run(self.universe)
+#         assert strategy.is_run == True
 
 
 # class TestParams:
@@ -85,7 +85,7 @@ class TestNTrades:
     Test `Strategy.n_trades`.
     """
 
-    universe = Universe(pd.DataFrame({f"A{i}": range(10) for i in range(4)}))
+    universe = pd.DataFrame({f"A{i}": range(10) for i in range(4)})
 
     def test_value(self):
         strategy = SampleStrategy().run(self.universe)
@@ -97,7 +97,7 @@ class TestNOrders:
     Test `Strategy.n_orders`.
     """
 
-    universe = Universe(pd.DataFrame({f"A{i}": range(10) for i in range(4)}))
+    universe = pd.DataFrame({f"A{i}": range(10) for i in range(4)})
 
     def test_value(self):
         strategy = SampleStrategy().run(self.universe)

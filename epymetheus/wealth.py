@@ -35,7 +35,7 @@ class Wealth(TradeResult):
 
     @staticmethod
     def _get_bars(strategy):
-        return strategy.universe.bars
+        return strategy.universe.index
 
     @staticmethod
     def _get_wealth(strategy):

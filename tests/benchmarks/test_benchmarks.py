@@ -2,15 +2,13 @@ import pytest
 
 import pandas as pd
 
-from epymetheus import Universe, Trade
+from epymetheus import Trade
 from epymetheus.benchmarks import BuyAndHold
 
 
 class TestBuyAndHold:
     def test(self):
-        universe = Universe(
-            pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4], "C": [3, 4, 5]})
-        )
+        universe = pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4], "C": [3, 4, 5]})
         strategy = BuyAndHold({"A": 0.5, "B": 0.5}).run(universe)
 
         assert len(strategy.trades) == 1

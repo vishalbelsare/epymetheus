@@ -2,10 +2,12 @@ import abc
 from inspect import cleandoc
 from time import time
 
+import numpy as np
+import pandas as pd
+
 from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
 from epymetheus.history import History
-from epymetheus.wealth import Wealth
 
 
 def create_strategy(logic_func, **params):
@@ -56,10 +58,9 @@ class Strategy(abc.ABC):
     - trades : array of Trade, shape (n_trades, )
     - n_trades : int
     - n_orders : int
-    - universe : Universe
+    - universe : pandas.DataFrame
     - history : History
     - transaction : Transaction
-    - wealth : Wealth
 
     Examples
     --------
@@ -87,16 +88,9 @@ class Strategy(abc.ABC):
     >>> from epymetheus.datasets import make_randomwalk
     >>> universe = make_randomwalk()
     >>> _ = my_strategy.run(universe, verbose=False)
-
-    Todo
-    ----
-    - dump trades in a light data structure
     """
 
     def __init__(self, logic_func=None, name=None, description=None, params=None):
-        """
-        Initialize self.
-        """
         if logic_func is not None:
             self.logic_func = logic_func
             self.params = params or {}
@@ -126,16 +120,17 @@ class Strategy(abc.ABC):
 
     def logic(self, universe):
         """
-        Logic to generate `Trade` from `Universe`.
+        Logic to generate trades from universe.
 
         Parameters
         ----------
-        - universe : Universe
-            Universe to apply the logic.
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
 
-        Yields
+        Returns
         ------
-        trade : Trade
+        trades : iterable of trades
         """
 
     @property
@@ -160,11 +155,6 @@ class Strategy(abc.ABC):
         return description
 
     @property
-    def is_run(self):
-        # Don't use "__is_run"; it cannot be accessed by getattr.
-        return getattr(self, "_is_run", False)
-
-    @property
     def n_trades(self):
         return len(self.trades)
 
@@ -176,23 +166,41 @@ class Strategy(abc.ABC):
     def history(self):
         return History(strategy=self)
 
-    @property
-    def wealth(self):
-        return Wealth(strategy=self)
+    def wealth(self, universe=None):
+        """
+        Return `pandas.Series` of wealth.
 
-    def run(self, universe, metrics=[], budget=0.0, verbose=True):
+        Returns
+        -------
+        wealth : pandas.Series
+            Series of wealth.
+        """
+        universe = universe or self.universe
+
+        wealth = np.zeros_like(universe.iloc[:, 0])
+        for t in self.trades:
+            i_open = universe.index.get_indexer([t.open_bar]).item()
+            i_open = i_open if i_open != -1 else 0
+            i_close = universe.index.get_loc(t.close_bar)
+
+            value = t.array_value(universe).sum(axis=1)
+            pnl = value - value[i_open]
+            pnl[:i_open] = 0
+            pnl[i_close:] = pnl[i_close]
+
+            wealth += pnl
+
+        return pd.Series(wealth, index=universe.index)
+
+    def run(self, universe, verbose=True):
         """
         Run a backtesting of strategy.
 
         Parameters
         ----------
-        - universe : Universe
-            Universe with which self is run.
-        - metrics : List[metrics]
-            List of metrics to be evaluated for the strategy during running.
-            See epymetheus.metrics.
-        - budget : float, default 0.0
-            Initial budget.
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
         - verbose : bool, default True
             Verbose mode.
 
@@ -200,20 +208,38 @@ class Strategy(abc.ABC):
         -------
         self
         """
-        self.__compile(metrics=metrics, budget=budget)
-
-        if verbose:
-            begin_time = time()
+        _begin_time = time()
 
         self.universe = universe
-        self.trades = self.__generate_trades(universe, verbose=verbose)
-        self.__execute_trades(universe, verbose=verbose)
 
-        self._is_run = True
+        # Yield trades
+        _begin_time_yield = time()
+        trades = []
+        for i, t in enumerate(self(universe, to_list=False) or []):
+            if verbose:
+                print(f"\rYield {i + 1} trades: {t} ... ", end="")
+            trades.append(t)
+        if len(trades) == 0:
+            raise NoTradeError("No trade.")
+        if verbose:
+            _time = time() - _begin_time_yield
+            print(f"Done. (Runtume: {_time:.4f} sec)")
+
+        # Execute trades
+        _begin_time_execute = time()
+        for i, t in enumerate(trades):
+            if verbose:
+                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
+            t.execute(universe)
+        if verbose:
+            _time = time() - _begin_time_execute
+            print(f"Done. (Runtime: {_time:.4f} sec)")
 
         if verbose:
-            print(f"Done. (Runtime : {time() - begin_time:.2f} sec)")
+            _time = time() - _begin_time
+            print(f"Done. (Runtime: {_time:.4f} sec)")
 
+        self.trades = trades
         return self
 
     def get_params(self):
@@ -251,53 +277,6 @@ class Strategy(abc.ABC):
 
         return self
 
-    def __compile(self, metrics, budget):
-        self.metrics = metrics
-        self.budget = budget
-
-    def __generate_trades(self, universe, verbose=True):
-        """
-        Generate trades according to `self.logic`.
-        It sets `self.trades`.
-
-        Parameters
-        ----------
-        - verbose : bool
-
-        Returns
-        -------
-        trades : list[Trade]
-        """
-        _begin_time = time()
-
-        trades = []
-        for i, t in enumerate(self(universe, to_list=False) or []):
-            if verbose:
-                print(f"\rYield {i + 1} trades: {t} ... ", end="")
-            trades.append(t)
-
-        if len(trades) == 0:
-            raise NoTradeError("No trade.")
-
-        if verbose:
-            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
-
-        return trades
-
-    def __execute_trades(self, universe, verbose=True):
-        """
-        Execute trades.
-        """
-        _begin_time = time()
-
-        for i, t in enumerate(self.trades):
-            if verbose:
-                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
-            t.execute(universe)
-
-        if verbose:
-            print(f"Done. (Runtime : {time() - _begin_time:.2f} sec)")
-
     def score(self, metric):
         """
         Returns the value of a metric of self.
@@ -307,7 +286,7 @@ class Strategy(abc.ABC):
         - metric : Metric or str
             Metric to evaluate.
         """
-        if not self.is_run:
+        if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
         return metric.result(self)

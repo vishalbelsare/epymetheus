@@ -1,8 +1,12 @@
 import pytest
 
+import numpy as np
 from epymetheus import trade
 from epymetheus import create_strategy
 from epymetheus import Strategy
+
+from epymetheus.datasets import make_randomwalk
+from epymetheus.benchmarks import RandomTrader
 
 
 class MyStrategy(Strategy):
@@ -59,3 +63,12 @@ class TestStrategy:
         strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
         with pytest.raises(DeprecationWarning):
             strategy.evaluate(None)
+
+    def test_sanity(self):
+        np.random.seed(42)
+        universe = make_randomwalk()
+        strategy = RandomTrader()
+
+        strategy.run(universe)
+
+        assert np.isclose(sum(strategy.history.pnl), strategy.wealth().values[-1])

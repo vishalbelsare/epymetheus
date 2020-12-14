@@ -3,14 +3,18 @@ import pytest
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from epymetheus import Trade, History, Universe
+from epymetheus import trade, History
 from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import DeterminedTrader, RandomTrader
 
 
 class TestBase:
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
+
     def _get_history(self):
-        universe = make_randomwalk(seed=42)
+        universe = make_randomwalk()
         strategy = RandomTrader(seed=42).run(universe)
         return History(strategy)
 
@@ -18,7 +22,7 @@ class TestBase:
         """
         `History.__init__` and `strategy.history` are supposed to give the same results.
         """
-        universe = make_randomwalk(seed=42)
+        universe = make_randomwalk()
         strategy = RandomTrader(seed=42).run(universe)
 
         result0 = pd.DataFrame(History(strategy))  # from History.__init__
@@ -47,14 +51,12 @@ class TestBase:
 
 class TestColumn:
 
-    universe = Universe(
-        pd.DataFrame(
-            {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
-        )
+    universe = pd.DataFrame(
+        {f"A{i}": range(10) for i in range(10)}, index=[f"B{i}" for i in range(10)]
     )
 
     trades = [
-        Trade(
+        trade(
             asset=["A0", "A1"],
             lot=[1, 2],
             open_bar="B0",
@@ -62,7 +64,7 @@ class TestColumn:
             take=1.0,
             stop=-1.0,
         ),
-        Trade(
+        trade(
             asset=["A2", "A3"],
             lot=[3, 4],
             open_bar="B1",
@@ -71,6 +73,10 @@ class TestColumn:
             stop=-2.0,
         ),
     ]
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self):
+        np.random.seed(42)
 
     def _get_history(self):
         strategy = DeterminedTrader(trades=self.trades).run(self.universe)

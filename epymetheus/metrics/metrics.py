@@ -1,16 +1,6 @@
 import abc
-from functools import reduce
 
 import numpy as np
-
-from epymetheus.utils.constants import EPSILON
-
-# TODO
-# - sortino
-# - max_underwater
-# - Factor coefficients
-# - alpha
-# - beta
 
 
 def _metric_from_name(name, **kwargs):
@@ -87,13 +77,12 @@ class Return(Metric):
         result = np.diff(series_wealth, prepend=series_wealth[0])
 
         if self.rate:
-            # TODO raise ValueError if initial budget = 0
             result /= np.roll(series_wealth, 1)  # array_wealth[0] = 0.0
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -128,8 +117,8 @@ class AverageReturn(Metric):
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.wealth.wealth + strategy.budget
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -155,8 +144,8 @@ class FinalWealth(Metric):
     def _result_from_wealth(self, series_wealth):
         return series_wealth[-1]
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -185,6 +174,8 @@ class Drawdown(Metric):
     # array([0.0, 0.0, 0.0, -1.0, -2.0])
     """
 
+    EPSILON = 10e-8
+
     def __init__(self, rate=False, **kwargs):
         super().__init__(**kwargs)
         self.rate = rate
@@ -198,12 +189,12 @@ class Drawdown(Metric):
         result = series_wealth - cummax
 
         if self.rate:
-            result /= cummax + EPSILON
+            result /= cummax + self.EPSILON
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -232,8 +223,10 @@ class MaxDrawdown(Metric):
     def name(self):
         return "max_drawdown"
 
-    def result(self, strategy):
-        return np.min(Drawdown(rate=self.rate).result(strategy))
+    def result(self, strategy, init_wealth=0.0):
+        return np.min(
+            Drawdown(rate=self.rate).result(strategy, init_wealth=init_wealth)
+        )
 
 
 class Volatility(Metric):
@@ -269,8 +262,8 @@ class Volatility(Metric):
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.wealth.wealth + strategy.budget
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth().values
         return self._result_from_wealth(series_wealth)
 
 
@@ -291,6 +284,8 @@ class SharpeRatio(Metric):
     sharpe_ratio : float
     """
 
+    EPSILON = 10e-8
+
     def __init__(self, rate=False, n=1, risk_free_return=0.0, **kwargs):
         super().__init__(**kwargs)
         self.rate = rate
@@ -301,10 +296,14 @@ class SharpeRatio(Metric):
     def name(self):
         return "sharpe_ratio"
 
-    def result(self, strategy):
-        average_return = AverageReturn(rate=self.rate, n=self.n).result(strategy)
-        volatility = Volatility(rate=self.rate, n=self.n).result(strategy)
-        volatility = max(volatility, EPSILON)
+    def result(self, strategy, init_wealth=0.0):
+        average_return = AverageReturn(rate=self.rate, n=self.n).result(
+            strategy, init_wealth=init_wealth
+        )
+        volatility = Volatility(rate=self.rate, n=self.n).result(
+            strategy, init_wealth=init_wealth
+        )
+        volatility = max(volatility, self.EPSILON)
         result = (average_return - self.risk_free_return) / volatility
         return result
 
@@ -318,6 +317,8 @@ class TradewiseSharpeRatio(Metric):
     tradewise_sharpe_ratio : float
     """
 
+    EPSILON = 10e-8
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -329,7 +330,7 @@ class TradewiseSharpeRatio(Metric):
         array_pnl = strategy.history.to_dataframe().groupby("trade_id").agg(sum)["pnl"]
         avg_pnl = np.mean(array_pnl)
         std_pnl = np.std(array_pnl)  # TODO parameter ddof
-        result = avg_pnl / max(std_pnl, EPSILON)
+        result = avg_pnl / max(std_pnl, self.EPSILON)
 
         return result
 
@@ -358,11 +359,22 @@ class Exposure(Metric):
         return "exposure"
 
     def result(self, strategy):
-        exposures = (
-            trade.series_exposure(strategy.universe, net=self.net)
-            for trade in strategy.trades
-        )
-        return reduce(np.add, exposures)
+        exposure = np.zeros_like(strategy.universe.iloc[:, 0])
+
+        for t in strategy.trades:
+            i_open = strategy.universe.index.get_indexer([t.open_bar]).item()
+            i_close = strategy.universe.index.get_indexer([t.close_bar]).item()
+
+            value = t.array_value(strategy.universe).astype(exposure.dtype)
+            value[:i_open] = 0
+            value[i_close + 1 :] = 0
+
+            if self.net:
+                exposure += value.sum(axis=1)
+            else:
+                exposure += np.abs(value).sum(axis=1)
+
+        return exposure
 
 
 # class Beta(Metric):

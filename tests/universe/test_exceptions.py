@@ -19,7 +19,7 @@ def test_error_nan(n_bars, n_assets):
     Universe should raise ValueError when `universe.prices`
     contains `numpy.nan`.
     """
-    prices = make_randomwalk(n_bars, n_assets).prices
+    prices = make_randomwalk(n_bars, n_assets)
     prices.iat[n_bars // 2, n_assets // 2] = np.nan
 
     with pytest.raises(ValueError):
@@ -33,7 +33,7 @@ def test_error_inf(n_bars, n_assets):
     Universe should raise ValueError when `universe.prices`
     contains `numpy.inf`.
     """
-    prices = make_randomwalk(n_bars, n_assets).prices
+    prices = make_randomwalk(n_bars, n_assets)
     prices.iat[n_bars // 2, n_assets // 2] = np.inf
 
     with pytest.raises(ValueError):
@@ -61,7 +61,7 @@ def test_error_nonunique_bar(n_bars, n_assets):
     bars = [f"MyBar{i}" for i in range(n_bars)]
     bars[n_bars // 2] = "MyBar0"
 
-    prices = make_randomwalk(n_bars, n_assets).prices
+    prices = make_randomwalk(n_bars, n_assets)
     prices.index = bars
 
     with pytest.raises(ValueError):
@@ -75,7 +75,7 @@ def test_error_nonunique_assets(n_bars, n_assets):
     assets[n_assets // 2] = "MyAsset0"
     print(assets)
 
-    prices = make_randomwalk(n_bars, n_assets).prices
+    prices = make_randomwalk(n_bars, n_assets)
     prices.columns = assets
 
     with pytest.raises(ValueError):

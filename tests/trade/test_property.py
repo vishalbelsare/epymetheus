@@ -5,18 +5,19 @@ from epymetheus import Trade
 from epymetheus.datasets import make_randomwalk
 
 
-class TestIsExecuted:
-    """
-    Test `Trade.is_executed`.
-    """
+# class TestIsExecuted:
+#     """
+#     Test `Trade.is_executed`.
+#     """
 
-    trade0 = Trade(asset="A0", lot=1.0)
+#     trade0 = Trade(asset="A0", lot=1.0)
 
-    def test_value(self):
-        trade = self.trade0
-        assert not trade.is_executed
-        trade = trade.execute(make_randomwalk(seed=42))
-        assert trade.is_executed
+#     def test_value(self):
+#         np.random.seed(42)
+#         trade = self.trade0
+#         assert not trade.is_executed
+#         trade = trade.execute(make_randomwalk())
+#         assert trade.is_executed
 
 
 class TestArrayAsset:

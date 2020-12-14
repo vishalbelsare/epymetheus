@@ -44,25 +44,44 @@ $ pip install epymetheus
 
 Let's construct your own strategy.  This strategy will:
 
-* buy the cheapest stock with your monthly allowance $100.0.
-* take profit if it exceeds $10.0 and make stop-loss order if the loss exceeds -$10.0.
+* buy the cheapest stock with your monthly allowance $100.
+* take profit if it exceeds $20 and make stop-loss order if the loss exceeds -$10.
 
 ```python
 import epymetheus as ep
 
 
-def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
+def dumb_strategy(universe: pd.DataFrame, profit_take=20, stop_loss=-10):
+    """
+    Buy the cheapest stock every month with my allowance.
+
+    Parameters
+    ----------
+    - profit_take : float, default None
+        Threshold (in unit of USD) to make profit-take order.
+    - stop_loss : float, default None
+        Threshold (in unit of USD) to make stop-loss order.
+
+    Yields
+    ------
+    trade : ep.trade
+        Trade object.
+    """
     # I get allowance on the first business day of each month
-    allowance = 100.0
-    allowance_dates = pd.date_range(universe.prices.index[0], universe.prices.index[-1], freq="BMS")
-    
+    allowance = 100
+    allowance_dates = pd.date_range(
+        universe.index[0], universe.index[-1], freq="BMS"
+    )
+
     trades = []
     for date in allowance_dates:
-        cheapest_stock = universe.prices.loc[date].idxmin()
+        # Find the cheapest stock
+        cheapest_stock = universe.loc[date].idxmin()
 
         # Find the maximum number of shares that I can buy with my allowance
-        n_shares = allowance // universe.prices.at[date, cheapest_stock]
+        n_shares = allowance // universe.at[date, cheapest_stock]
 
+        # Trade!
         trade = n_shares * ep.trade(
             cheapest_stock,
             open_bar=date,
@@ -70,13 +89,13 @@ def dumb_strategy(universe, profit_take=10.0, stop_loss=-10.0):
             stop=stop_loss,
         )
         trades.append(trade)
-        
-    return trades
+
+    return trade
 ```
 
 Here,
 
-* The first parameter `universe` is mandatory. It means a set of assets that you will trade (US stocks, cryptocurrencies, etc).
+* The first parameter `universe` is mandatory. This is `pandas.DataFrame` of the historical prices of assets that you will trade (US stocks, cryptocurrencies, etc).
 * The following parameters, `profit_take` and `stop_loss` parametrize your strategy.
 
 You can create your strategy as:
@@ -87,13 +106,13 @@ my_strategy = ep.create_strategy(dumb_strategy, profit_take=20.0, stop_loss=-10.
 
 ### Run strategy
 
-Now your strategy is readily backtested with any `Universe`.
+Now your strategy is readily backtested with any universe.
 
 ```python
 from epymetheus.datasets import fetch_usstocks
 
 universe = fetch_usstocks(n_assets=10)
-universe.prices
+universe
 #                  AAPL        MSFT         AMZN   BRK-A         JPM         JNJ         WMT        BAC          PG        XOM
 # 2000-01-01   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
 # 2000-01-02   0.785456   37.162327    76.125000   56100   27.773939   27.289129   46.962898  14.527933   31.304089  21.492596
@@ -117,7 +136,7 @@ Trade history can be viewed as:
 df_history = my_strategy.history.to_dataframe()
 df_history.head()
 #           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop        pnl
-# order_id                                                                             
+# order_id
 # 0                0  AAPL  116.0 2000-01-03 2000-01-06     None  20.0 -10.0 -15.010098
 # 1                1  AAPL  130.0 2000-02-01 2000-03-01     None  20.0 -10.0  29.856866
 # 2                2  AAPL  100.0 2000-03-01 2000-03-14     None  20.0 -10.0 -12.271219
@@ -174,7 +193,7 @@ import optuna
 def objective(trial):
     profit_take = trial.suggest_int("profit_take", 10, 100)
     stop_loss = trial.suggest_int("stop_loss", -100, -10)
-    
+
     my_strategy = ep.create_strategy(
         dumb_strategy,
         profit_take=profit_take,
