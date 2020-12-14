@@ -180,7 +180,7 @@ class Strategy(abc.ABC):
     def wealth(self):
         return Wealth(strategy=self)
 
-    def run(self, universe, metrics=[], budget=0.0, verbose=True):
+    def run(self, universe, verbose=True):
         """
         Run a backtesting of strategy.
 
@@ -188,11 +188,6 @@ class Strategy(abc.ABC):
         ----------
         - universe : Universe
             Universe with which self is run.
-        - metrics : List[metrics]
-            List of metrics to be evaluated for the strategy during running.
-            See epymetheus.metrics.
-        - budget : float, default 0.0
-            Initial budget.
         - verbose : bool, default True
             Verbose mode.
 
@@ -200,8 +195,6 @@ class Strategy(abc.ABC):
         -------
         self
         """
-        self.__compile(metrics=metrics, budget=budget)
-
         if verbose:
             begin_time = time()
 
@@ -250,10 +243,6 @@ class Strategy(abc.ABC):
                 self.params[key] = value
 
         return self
-
-    def __compile(self, metrics, budget):
-        self.metrics = metrics
-        self.budget = budget
 
     def __generate_trades(self, universe, verbose=True):
         """
