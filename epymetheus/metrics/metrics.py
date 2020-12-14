@@ -87,13 +87,12 @@ class Return(Metric):
         result = np.diff(series_wealth, prepend=series_wealth[0])
 
         if self.rate:
-            # TODO raise ValueError if initial budget = 0
             result /= np.roll(series_wealth, 1)  # array_wealth[0] = 0.0
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth.wealth
         return self._result_from_wealth(series_wealth)
 
 
@@ -128,8 +127,8 @@ class AverageReturn(Metric):
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.wealth.wealth + strategy.budget
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = strategy.wealth.wealth + init_wealth
         return self._result_from_wealth(series_wealth)
 
 
@@ -155,8 +154,8 @@ class FinalWealth(Metric):
     def _result_from_wealth(self, series_wealth):
         return series_wealth[-1]
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth.wealth
         return self._result_from_wealth(series_wealth)
 
 
@@ -202,8 +201,8 @@ class Drawdown(Metric):
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.budget + strategy.wealth.wealth
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth.wealth
         return self._result_from_wealth(series_wealth)
 
 
@@ -232,8 +231,8 @@ class MaxDrawdown(Metric):
     def name(self):
         return "max_drawdown"
 
-    def result(self, strategy):
-        return np.min(Drawdown(rate=self.rate).result(strategy))
+    def result(self, strategy, init_wealth=0.0):
+        return np.min(Drawdown(rate=self.rate).result(strategy, init_wealth=init_wealth))
 
 
 class Volatility(Metric):
@@ -269,8 +268,8 @@ class Volatility(Metric):
 
         return result
 
-    def result(self, strategy):
-        series_wealth = strategy.wealth.wealth + strategy.budget
+    def result(self, strategy, init_wealth=0.0):
+        series_wealth = init_wealth + strategy.wealth.wealth
         return self._result_from_wealth(series_wealth)
 
 
@@ -301,9 +300,9 @@ class SharpeRatio(Metric):
     def name(self):
         return "sharpe_ratio"
 
-    def result(self, strategy):
-        average_return = AverageReturn(rate=self.rate, n=self.n).result(strategy)
-        volatility = Volatility(rate=self.rate, n=self.n).result(strategy)
+    def result(self, strategy, init_wealth=0.0):
+        average_return = AverageReturn(rate=self.rate, n=self.n).result(strategy, init_wealth=init_wealth)
+        volatility = Volatility(rate=self.rate, n=self.n).result(strategy, init_wealth=init_wealth)
         volatility = max(volatility, EPSILON)
         result = (average_return - self.risk_free_return) / volatility
         return result

@@ -121,11 +121,9 @@ class TestReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate)
-        strategy = RandomTrader(seed=seed).run(
-            make_randomwalk(seed=seed), budget=init_wealth
-        )
+        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
         series_wealth = init_wealth + strategy.wealth.wealth
-        result = m.result(strategy)
+        result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
         assert np.allclose(result, result_from_wealth)
 
@@ -147,7 +145,7 @@ class TestAverageReturn:
         """
         series_wealth = init_wealth + np.zeros(n_bars)
         result = self.MetricClass(rate=rate, n=n)._result_from_wealth(series_wealth)
-        expected = 0
+        expected = 0.0
         assert np.allclose(result, expected)
 
     @pytest.mark.parametrize("rate", [True, False])
@@ -169,11 +167,9 @@ class TestAverageReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate, n=n)
-        strategy = RandomTrader(seed=42).run(
-            make_randomwalk(seed=42), budget=init_wealth
-        )
-        series_wealth = strategy.budget + strategy.wealth.wealth
-        result = m.result(strategy)
+        strategy = RandomTrader(seed=42).run(make_randomwalk(seed=42))
+        series_wealth = init_wealth + strategy.wealth.wealth
+        result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
         assert np.allclose(result, result_from_wealth)
 
@@ -293,11 +289,10 @@ class TestMaxDrawdown:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(
-            make_randomwalk(seed=seed), budget=init_wealth
-        )
-        result = self.MetricClass(rate=rate,).result(strategy)
-        expected = np.min(Drawdown(rate=rate).result(strategy))
+        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        metric = self.MetricClass(rate=rate)
+        result = metric.result(strategy, init_wealth=init_wealth)
+        expected = np.min(Drawdown(rate=rate).result(strategy, init_wealth=init_wealth))
         assert result == expected
 
 
@@ -350,9 +345,15 @@ class TestSharpeRatio:
     @pytest.mark.parametrize("init_wealth", [100.0])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero(self, rate, init_wealth, n_bars):
-        universe = Universe(pd.DataFrame({"A0": np.ones(n_bars, dtype=float),}))
-        strategy = DeterminedTrader([Trade("A0")]).run(universe, budget=init_wealth)
-        result = self.MetricClass(rate=rate).result(strategy)
+        universe = Universe(
+            pd.DataFrame(
+                {
+                    "A0": np.ones(n_bars, dtype=float),
+                }
+            )
+        )
+        strategy = DeterminedTrader([Trade("A0")]).run(universe)
+        result = self.MetricClass(rate=rate).result(strategy, init_wealth=init_wealth)
         expected = 0
         assert np.allclose(result, expected)
 
@@ -362,14 +363,11 @@ class TestSharpeRatio:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, n, risk_free_return, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(
-            make_randomwalk(seed=seed), budget=init_wealth
-        )
-        result = self.MetricClass(
-            rate=rate, n=n, risk_free_return=risk_free_return
-        ).result(strategy)
-        r = AverageReturn(rate=rate, n=n).result(strategy)
-        s = Volatility(rate=rate, n=n).result(strategy)
+        strategy = RandomTrader(seed=seed).run(make_randomwalk(seed=seed))
+        metric = self.MetricClass(rate=rate, n=n, risk_free_return=risk_free_return)
+        result = metric.result(strategy, init_wealth=init_wealth)
+        r = AverageReturn(rate=rate, n=n).result(strategy, init_wealth=init_wealth)
+        s = Volatility(rate=rate, n=n).result(strategy, init_wealth=init_wealth)
         expected = (r - risk_free_return) / s
         assert result == expected
 
@@ -388,13 +386,24 @@ class TestExposure:
     MetricClass = Exposure
 
     universe_hand = Universe(
-        pd.DataFrame({"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 1, 8, 1],})
+        pd.DataFrame(
+            {
+                "A0": [3, 1, 4, 1, 5, 9, 2],
+                "A1": [2, 7, 1, 8, 1, 8, 1],
+            }
+        )
     )
 
     @pytest.mark.parametrize("net", [True, False])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero_0(self, net, n_bars):
-        universe = Universe(pd.DataFrame({"A0": np.zeros(n_bars, dtype=float),}))
+        universe = Universe(
+            pd.DataFrame(
+                {
+                    "A0": np.zeros(n_bars, dtype=float),
+                }
+            )
+        )
         strategy = DeterminedTrader([Trade("A0")]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
@@ -403,7 +412,13 @@ class TestExposure:
     @pytest.mark.parametrize("net", [True, False])
     @pytest.mark.parametrize("n_bars", [100])
     def test_result_zero_1(self, net, n_bars):
-        universe = Universe(pd.DataFrame({"A0": np.linspace(0.0, 1.0, n_bars),}))
+        universe = Universe(
+            pd.DataFrame(
+                {
+                    "A0": np.linspace(0.0, 1.0, n_bars),
+                }
+            )
+        )
         strategy = DeterminedTrader([Trade("A0", lot=0.0)]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
