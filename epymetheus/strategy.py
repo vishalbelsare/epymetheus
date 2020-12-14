@@ -94,9 +94,6 @@ class Strategy(abc.ABC):
     """
 
     def __init__(self, logic_func=None, name=None, description=None, params=None):
-        """
-        Initialize self.
-        """
         if logic_func is not None:
             self.logic_func = logic_func
             self.params = params or {}
