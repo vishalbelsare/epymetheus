@@ -44,7 +44,7 @@ class History(TradeResult):
         -------
         history : History
         """
-        if not strategy.is_run:
+        if not hasattr(strategy, "trades"):
             raise NotRunError("Strategy has not been run")
 
         return cls(

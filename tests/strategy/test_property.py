@@ -56,18 +56,18 @@ class TestDescription:
         assert strategy.description is None
 
 
-class TestIsRun:
-    """
-    Test `Strategy.is_run`.
-    """
+# class TestIsRun:
+#     """
+#     Test `Strategy.is_run`.
+#     """
 
-    universe = Universe(pd.DataFrame({f"A{i}": range(10) for i in range(4)}))
+#     universe = Universe(pd.DataFrame({f"A{i}": range(10) for i in range(4)}))
 
-    def test_value(self):
-        strategy = SampleStrategy()
-        assert strategy.is_run == False
-        strategy.run(self.universe)
-        assert strategy.is_run == True
+#     def test_value(self):
+#         strategy = SampleStrategy()
+#         assert strategy.is_run == False
+#         strategy.run(self.universe)
+#         assert strategy.is_run == True
 
 
 # class TestParams:
