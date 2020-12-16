@@ -13,8 +13,8 @@
 ## Introduction
 
 ***Epymetheus*** (pronounced as [Epimetheus](https://en.wikipedia.org/wiki/Epimetheus)) is a multi-asset backtesting framework.
+
 It features an intuitive user API and the analysts can build and try out their trade strategies right away.
-Trade executions of profit-taking and stop-loss are built-in.
 
 ### Features
 
@@ -25,27 +25,19 @@ Trade executions of profit-taking and stop-loss are built-in.
     - You can use `pandas.DataFrame` of historical prices as the target of backtesting.
     - You can view the result of backtesting as `pandas` so that you can analyze and plot it using the familiar Pandas methods.
 3. **Blazingly Fast Computation**
-    - Backtesting is boosted by NumPy.
-    - You can give your own idea a quick try.
+    - Backtesting is boosted by NumPy and so you can give your own idea a quick try.
+    - Executions of profit-taking and stop-loss orders are built-in.
 4. **Full Test Coverage**:
     - Epymetheus is thoroughly tested by [continuous integration](https://github.com/simaki/epymetheus/actions?query=workflow%3ACI) with 100% code coverage.
 
 ### Integrations
 
-*Epymetheus* only provides a framework.
-Your trading strategy can incorporate various libraries out there, for instance,
+Your trading strategy may incorporate various libraries out there, for instance,
 
-* **Machine Learning**
-    - [scikit-learn](https://github.com/scikit-learn/scikit-learn)
-    - [PyTorch](https://github.com/pytorch/pytorch)
-    - [TensorFlow](https://github.com/tensorflow/tensorflow)
-* **Econometrics**
-    - [statsmodels](https://github.com/statsmodels/statsmodels)
-    - [Prophet](https://github.com/facebook/prophet)
-* **Technical Indicators**
-    - [TA-Lib](https://github.com/mrjbq7/ta-lib)
-* **Hyperparameter Optimization**
-    - [Optuna](https://github.com/optuna/optuna) (Example follows.)
+* **Machine Learning** - [scikit-learn](https://github.com/scikit-learn/scikit-learn), [PyTorch](https://github.com/pytorch/pytorch), [TensorFlow](https://github.com/tensorflow/tensorflow), etc.
+* **Econometrics** - [statsmodels](https://github.com/statsmodels/statsmodels), [Prophet](https://github.com/facebook/prophet), etc.
+* **Technical Indicators** - [TA-Lib](https://github.com/mrjbq7/ta-lib), etc.
+* **Hyperparameter Optimization** - [Optuna](https://github.com/optuna/optuna) (Example follows), etc.
 
 ## Installation
 
@@ -64,7 +56,9 @@ The following "[dumb strategy](https://www.ted.com/talks/ray_dalio_how_to_build_
 
 * target a set of stocks whose `DataFrame` of historical prices is given by `universe`.
 * buy the cheapest stock with your monthly allowance $100, and
-* place a profit-taking order when your profit exceeds $`profit_take` and place a stop-loss order when your loss exceeds $`stop_loss`. These are free parameters.
+* place a profit-taking order when your profit exceeds $`profit_take` and place a stop-loss order when your loss exceeds $`stop_loss`.
+
+Here in the function `dumb_strategy`, the first argument `universe` is mandatory while the other arguments are parameters that you can define freely.
 
 ```python
 import pandas as pd
@@ -106,7 +100,7 @@ Now you can backtest your strategy with any universe, for instance, US stocks.
 ```python
 from epymetheus.datasets import fetch_usstocks
 
-universe = fetch_usstocks(n_assets=10)
+universe = fetch_usstocks()
 universe.head()
 #                 AAPL       MSFT     AMZN  BRK-A        JPM        JNJ        WMT        BAC         PG        XOM
 # 2000-01-01  0.785456  37.162327  76.1250  56100  27.773939  27.289129  46.962898  14.527933  31.304089  21.492596
@@ -179,6 +173,7 @@ sharpe_ratio = my_strategy.score(SharpeRatio())
 ### Optimization
 
 You may optimize the parameters of your strategy using [Optuna](https://github.com/optuna/optuna) for example.
+
 Remember that optimization for backtesting is dangerous.
 
 ```python
@@ -208,6 +203,7 @@ study.best_params
 ### Pair trading
 
 Trade can include multiple stocks.
+
 Profit-take and stop-loss will be executed when the total profit/loss exceed thresholds.
 
 ```python
