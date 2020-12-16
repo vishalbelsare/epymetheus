@@ -5,44 +5,25 @@ import matplotlib.pyplot as plt
 import seaborn
 
 
-seaborn.set_style("whitegrid")
-
-
 def print_as_comment(obj):
     print("\n".join(f"# {line}" for line in str(obj).splitlines()))
 
 
 if __name__ == "__main__":
     sys.path.append("../..")
+    seaborn.set_style("whitegrid")
 
     # ---
 
+    import pandas as pd
     import epymetheus as ep
 
-    def dumb_strategy(universe: pd.DataFrame, profit_take=20, stop_loss=-10):
-        """
-        Buy the cheapest stock every month with my allowance.
-
-        Parameters
-        ----------
-        - profit_take : float, default None
-            Threshold (in unit of USD) to make profit-take order.
-        - stop_loss : float, default None
-            Threshold (in unit of USD) to make stop-loss order.
-
-        Yields
-        ------
-        trade : ep.trade
-            Trade object.
-        """
-        # I get allowance on the first business day of each month
+    def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
+        # I get $100 allowance on the first business day of each month
         allowance = 100
-        allowance_dates = pd.date_range(
-            universe.index[0], universe.index[-1], freq="BMS"
-        )
 
         trades = []
-        for date in allowance_dates:
+        for date in pd.date_range(universe.index[0], universe.index[-1], freq="BMS"):
             cheapest_stock = universe.loc[date].idxmin()
 
             # Find the maximum number of shares that I can buy with my allowance
@@ -67,8 +48,6 @@ if __name__ == "__main__":
     from epymetheus.datasets import fetch_usstocks
 
     universe = fetch_usstocks()
-    print(">>> type(universe)")
-    print_as_comment(type(universe))
     print(">>> universe.head()")
     print_as_comment(universe.head())
 
@@ -77,22 +56,22 @@ if __name__ == "__main__":
 
     # ---
 
-    df_history = my_strategy.history.to_dataframe()
-    df_history.head()
-    print(">>> df_history.head()")
-    print_as_comment(df_history.head())
+    history = my_strategy.history.to_dataframe()
+    history.head()
+    print(">>> history.head()")
+    print_as_comment(history.head())
 
-    print(sum(df_history.pnl))
+    print(sum(history.pnl))
 
     # ---
 
-    df_wealth = my_strategy.wealth()
+    series_wealth = my_strategy.wealth()
 
-    print(">>> my_strategy.wealth().head()")
-    print_as_comment(my_strategy.wealth().head())
+    print(">>> series_wealth.head()")
+    print_as_comment(series_wealth.head())
 
     plt.figure(figsize=(16, 4))
-    plt.plot(df_wealth, linewidth=1)
+    plt.plot(series_wealth, linewidth=1)
     plt.xlabel("date")
     plt.ylabel("wealth [USD]")
     plt.title("Wealth")

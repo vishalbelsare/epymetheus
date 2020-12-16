@@ -7,42 +7,25 @@ import seaborn
 import optuna
 
 
-seaborn.set_style("whitegrid")
-
-
 def print_as_comment(obj):
     print("\n".join(f"# {line}" for line in str(obj).splitlines()))
 
 
 if __name__ == "__main__":
     sys.path.append("../..")
+    seaborn.set_style("whitegrid")
 
+    # ---
+
+    import pandas as ep
     import epymetheus as ep
 
-    def dumb_strategy(universe: pd.DataFrame, profit_take=20, stop_loss=-10):
-        """
-        Buy the cheapest stock every month with my allowance.
-
-        Parameters
-        ----------
-        - profit_take : float, default None
-            Threshold (in unit of USD) to make profit-take order.
-        - stop_loss : float, default None
-            Threshold (in unit of USD) to make stop-loss order.
-
-        Yields
-        ------
-        trade : ep.trade
-            Trade object.
-        """
-        # I get allowance on the first business day of each month
+    def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
+        # I get $100 allowance on the first business day of each month
         allowance = 100
-        allowance_dates = pd.date_range(
-            universe.index[0], universe.index[-1], freq="BMS"
-        )
 
         trades = []
-        for date in allowance_dates:
+        for date in pd.date_range(universe.index[0], universe.index[-1], freq="BMS"):
             cheapest_stock = universe.loc[date].idxmin()
 
             # Find the maximum number of shares that I can buy with my allowance
@@ -57,6 +40,8 @@ if __name__ == "__main__":
             trades.append(trade)
 
         return trades
+
+    # ---
 
     from epymetheus.datasets import fetch_usstocks
     from epymetheus.metrics import FinalWealth
