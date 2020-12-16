@@ -210,5 +210,5 @@ Profit-take and stop-loss will be executed when the total profit/loss exceed thr
 def pair_trading_strategy(universe, param_1, ...):
     ...
     # Buy 1 share of "BULLISH_STOCK" and sell 2 shares of "BEARISH_STOCK"df_wealth.
-    yield [1.0, -2.0] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
+    yield [1, -2] * ep.trade(["BULLISH_STOCK", "BEARISH_STOCK"], stop=-100.0)
 ```
