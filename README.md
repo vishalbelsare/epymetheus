@@ -26,7 +26,7 @@ It features an intuitive user API that lets analysts can try out their trade str
     - Executions of profit-taking and stop-loss orders are built-in.
 3. **Seamless Connection with [Pandas](https://github.com/pandas-dev/pandas)**
     - You can use `pandas.DataFrame` of historical prices as the target of backtesting.
-    - You can view the result of backtesting as `pandas` so that you can analyze and plot it using the familiar Pandas methods.
+    - You can view the result of backtesting in Pandas format so that you can analyze and plot it using the familiar Pandas methods.
 4. **Full Test Coverage**:
     - Epymetheus is thoroughly tested by [continuous integration](https://github.com/simaki/epymetheus/actions?query=workflow%3ACI) with 100% code coverage.
 
