@@ -14,7 +14,7 @@
 
 ***Epymetheus*** (pronounced as [Epimetheus](https://en.wikipedia.org/wiki/Epimetheus)) is a multi-asset backtesting framework.
 
-It features an intuitive user API that lets analysts can try out their trade strategies right away.
+It features an intuitive user API that lets analysts try out their trade strategies right away.
 
 ### Features
 
