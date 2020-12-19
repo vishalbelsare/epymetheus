@@ -175,7 +175,7 @@ class Strategy(abc.ABC):
         trades = []
         for i, t in enumerate(self(universe, to_list=False) or []):
             if verbose:
-                print(f"\rYield {i + 1} trades: {t} ... ", end="")
+                print(f"\r{i + 1} trades yielded: {t} ... ", end="")
             trades.append(t)
         if len(trades) == 0:
             raise NoTradeError("No trade.")
@@ -187,7 +187,7 @@ class Strategy(abc.ABC):
         _begin_time_execute = time()
         for i, t in enumerate(trades):
             if verbose:
-                print(f"\rExecute {i + 1} trades: {t} ... ", end="")
+                print(f"\r{i + 1} trades executed: {t} ... ", end="")
             t.execute(universe)
         if verbose:
             _time = time() - _begin_time_execute
