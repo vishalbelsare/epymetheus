@@ -26,71 +26,22 @@ def create_strategy(logic_func, **params):
     >>> from epymetheus import trade
     ...
     >>> def logic_func(universe, my_param):
-    ...     return [my_param * trade("A")]
+    ...     return [my_param * trade("AAPL")]
     ...
     >>> strategy = create_strategy(logic_func, my_param=2.0)
     >>> universe = None
     >>> strategy(universe)
-    [trade(['A'], lot=[2.])]
+    [trade(['AAPL'], lot=[2.])]
     """
     return Strategy._create_strategy(logic_func=logic_func, params=params)
 
 
 class Strategy(abc.ABC):
     """
-    Represents a strategy to trade.
-
-    Parameters
-    ----------
-    - logic : callable
-    -
-
-    - name : str, optional
-        Name of the strategy.
-    - description : str, optional
-        Description of the strategy.
-        If None, docstring.
-    - params : dict
-        Parameters of the logic.
-
-    Attributes
-    ----------
-    - trades : array of Trade, shape (n_trades, )
-    - n_trades : int
-    - n_orders : int
-    - universe : pandas.DataFrame
-    - history : History
-    - transaction : Transaction
-
-    Examples
-    --------
-    Define strategy by subclassing:
-    >>> from epymetheus import trade
-    >>> class MyStrategy(Strategy):
-    ...     '''
-    ...     This is my favorite strategy.
-    ...     '''
-    ...     def __init__(self, my_parameter):
-    ...         self.my_parameter = my_parameter
-    ...
-    ...     def logic(self, universe):
-    ...         ...
-    ...         yield trade(...)
-
-    Initialize:
-    >>> my_strategy = MyStrategy(my_parameter=0.1)
-    >>> my_strategy.name
-    'MyStrategy'
-    >>> my_strategy.description
-    'This is my favorite strategy.'
-
-    Run:
-    >>> from epymetheus.datasets import make_randomwalk
-    >>> universe = make_randomwalk()
-    >>> _ = my_strategy.run(universe, verbose=False)
+    Base class of trading strategy.
     """
 
-    def __init__(self, logic_func=None, name=None, description=None, params=None):
+    def __init__(self, logic_func=None, params=None):
         if logic_func is not None:
             self.logic_func = logic_func
             self.params = params or {}
@@ -98,12 +49,14 @@ class Strategy(abc.ABC):
     @classmethod
     def _create_strategy(cls, logic_func, params):
         """
-        Create strategy from logic function.
+        Create strategy from a logic function.
 
         Parameters
         ----------
         - logic_func : callable
+            Function that returns iterable from universe and parameters.
         - params : dict
+            Parameter values.
 
         Returns
         -------
@@ -118,15 +71,18 @@ class Strategy(abc.ABC):
             trades = list(trades)
         return trades
 
-    def logic(self, universe):
+    def logic(self, universe, **params):
         """
         Logic to generate trades from universe.
+        Used to implement trading strategy by subclassing `Strategy`.
 
         Parameters
         ----------
         - universe : pandas.DataFrame
             Historical price data to apply this strategy.
             The index represents timestamps and the column is the assets.
+        - **params
+            Parameter values.
 
         Returns
         ------
@@ -135,7 +91,9 @@ class Strategy(abc.ABC):
 
     @property
     def name(self):
-        """Return name of the strategy."""
+        """
+        Return name of the strategy.
+        """
         return self.__class__.__name__
 
     @property
@@ -166,7 +124,7 @@ class Strategy(abc.ABC):
     def history(self):
         return History(strategy=self)
 
-    def wealth(self, universe=None):
+    def wealth(self, universe=None) -> pd.Series:
         """
         Return `pandas.Series` of wealth.
 
@@ -242,7 +200,7 @@ class Strategy(abc.ABC):
         self.trades = trades
         return self
 
-    def get_params(self):
+    def get_params(self) -> dict:
         """
         Set the parameters of this strategy.
 
