@@ -175,7 +175,7 @@ class Strategy(abc.ABC):
         trades = []
         for i, t in enumerate(self(universe, to_list=False) or []):
             if verbose:
-                print(f"\r{i + 1} trades yielded: {t} ... ", end="")
+                print(f"\r{i + 1} trades returned: {t} ... ", end="")
             trades.append(t)
         if len(trades) == 0:
             raise NoTradeError("No trade.")
