@@ -112,9 +112,9 @@ universe.head()
 
 ```python
 my_strategy.run(universe)
-# Yield 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00, take=20.0, stop=-10.0) ... Done. (Runtume: 0.1022 sec)
-# Execute 240 trades: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00, take=20.0, stop=-10.0) ... Done. (Runtime: 0.2276 sec)
-# Done. (Runtime: 0.3299 sec)
+# 240 trades returned: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00, take=20.0, stop=-10.0) ... Done. (Runtume: 0.1039 sec)
+# 240 trades executed: trade(['BAC'], lot=[3.], open_bar=2019-12-02 00:00:00, take=20.0, stop=-10.0) ... Done. (Runtime: 0.2279 sec)
+# Done. (Runtime: 0.3319 sec)
 ```
 
 ### Trade history and wealth
