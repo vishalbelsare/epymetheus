@@ -21,12 +21,12 @@ It features an intuitive user API that lets analysts can try out their trade str
 1. **Intuitive and Pythonic API**
     - *Epymetheus* designs Pythonic API that lets you code your idea intuitively without any fuss.
     - Trading strategies can be readily coded as ordinary functions and then you can `run()` and `score()` it right away.
-2. **Seamless Connection with [Pandas](https://github.com/pandas-dev/pandas)**
-    - You can use `pandas.DataFrame` of historical prices as the target of backtesting.
-    - You can view the result of backtesting as `pandas` so that you can analyze and plot it using the familiar Pandas methods.
-3. **Blazingly Fast Computation**
+2. **Blazingly Fast Computation**
     - Backtesting is boosted by NumPy and so you can give your own idea a quick try.
     - Executions of profit-taking and stop-loss orders are built-in.
+3. **Seamless Connection with [Pandas](https://github.com/pandas-dev/pandas)**
+    - You can use `pandas.DataFrame` of historical prices as the target of backtesting.
+    - You can view the result of backtesting as `pandas` so that you can analyze and plot it using the familiar Pandas methods.
 4. **Full Test Coverage**:
     - Epymetheus is thoroughly tested by [continuous integration](https://github.com/simaki/epymetheus/actions?query=workflow%3ACI) with 100% code coverage.
 
