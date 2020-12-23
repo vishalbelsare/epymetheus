@@ -6,7 +6,7 @@ import pandas as pd
 import epymetheus as ep
 from epymetheus import Trade
 from epymetheus.exceptions import NotRunError
-from epymetheus.benchmarks import RandomTrader, DeterminedTrader
+from epymetheus.benchmarks import RandomStrategy, DeterminedStrategy
 from epymetheus.datasets import make_randomwalk
 from epymetheus.metrics import Return
 from epymetheus.metrics import AverageReturn
@@ -48,7 +48,7 @@ class TestBase:
         Test if `strategy.score(metric) == metric.result(strategy)`
         """
         m = MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         result0 = np.array(m.result(strategy))  # from metric method
         result1 = np.array(strategy.score(m))  # from strategy method
         assert np.equal(result0, result1).all()
@@ -60,7 +60,7 @@ class TestBase:
         Test if `metric.result(strategy) == metric(strategy)`.
         """
         m = MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         result0 = np.array(m.result(strategy))  # from `result` method
         result1 = np.array(m(strategy))  # from __call__
         assert np.equal(result0, result1).all()
@@ -86,7 +86,7 @@ class TestBase:
         """
         m = MetricClass()
         with pytest.raises(NotRunError):
-            RandomTrader(seed=42).score(m)
+            RandomStrategy(seed=42).score(m)
 
 
 class TestReturn:
@@ -130,7 +130,7 @@ class TestReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate)
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         series_wealth = init_wealth + strategy.wealth().values
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
@@ -180,7 +180,7 @@ class TestAverageReturn:
         `m._result_from_wealth(series_wealth) == m.result(strategy.wealth.wealth)`
         """
         m = self.MetricClass(rate=rate, n=n)
-        strategy = RandomTrader(seed=42).run(make_randomwalk())
+        strategy = RandomStrategy(seed=42).run(make_randomwalk())
         series_wealth = init_wealth + strategy.wealth().values
         result = m.result(strategy, init_wealth=init_wealth)
         result_from_wealth = m._result_from_wealth(series_wealth)
@@ -217,7 +217,7 @@ class TestFinalWealth:
     @pytest.mark.parametrize("seed", range(1))
     def test_result(self, seed):
         m = self.MetricClass()
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         result0 = m.result(strategy)
         result1 = m._result_from_wealth(strategy.wealth().values)
         assert result0 == result1
@@ -269,7 +269,7 @@ class TestDrawdown:
     @pytest.mark.parametrize("rate", [True, False])
     def test_result(self, seed, rate):
         m = self.MetricClass(rate=rate)
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
 
         result0 = m.result(strategy)
         result1 = m._result_from_wealth(strategy.wealth().values)
@@ -314,7 +314,7 @@ class TestMaxDrawdown:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         metric = self.MetricClass(rate=rate)
         result = metric.result(strategy, init_wealth=init_wealth)
         expected = np.min(Drawdown(rate=rate).result(strategy, init_wealth=init_wealth))
@@ -383,7 +383,7 @@ class TestSharpeRatio:
                 "A0": np.ones(n_bars, dtype=float),
             }
         )
-        strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
+        strategy = DeterminedStrategy([ep.trade("A0")]).run(universe)
         result = self.MetricClass(rate=rate).result(strategy, init_wealth=init_wealth)
         expected = 0
         assert np.allclose(result, expected)
@@ -394,7 +394,7 @@ class TestSharpeRatio:
     @pytest.mark.parametrize("seed", range(1))
     @pytest.mark.parametrize("init_wealth", [10000.0])
     def test_random(self, rate, n, risk_free_return, seed, init_wealth):
-        strategy = RandomTrader(seed=seed).run(make_randomwalk())
+        strategy = RandomStrategy(seed=seed).run(make_randomwalk())
         metric = self.MetricClass(rate=rate, n=n, risk_free_return=risk_free_return)
         result = metric.result(strategy, init_wealth=init_wealth)
         r = AverageReturn(rate=rate, n=n).result(strategy, init_wealth=init_wealth)
@@ -440,7 +440,7 @@ class TestExposure:
                 "A0": np.zeros(n_bars, dtype=float),
             }
         )
-        strategy = DeterminedTrader([ep.trade("A0")]).run(universe)
+        strategy = DeterminedStrategy([ep.trade("A0")]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
         assert np.allclose(result, expected)
@@ -453,7 +453,7 @@ class TestExposure:
                 "A0": np.linspace(0.0, 1.0, n_bars),
             }
         )
-        strategy = DeterminedTrader([ep.trade("A0", lot=0.0)]).run(universe)
+        strategy = DeterminedStrategy([ep.trade("A0", lot=0.0)]).run(universe)
         result = self.MetricClass(net=net).result(strategy)
         expected = np.zeros(n_bars)
         assert np.allclose(result, expected)
@@ -463,7 +463,7 @@ class TestExposure:
         universe = self.universe_hand
         trade0 = ep.trade("A0", lot=2.0, open_bar=1, shut_bar=5)
         trade1 = ep.trade("A1", lot=-3.0, open_bar=2, shut_bar=4)
-        strategy = DeterminedTrader([trade0, trade1]).run(universe)
+        strategy = DeterminedStrategy([trade0, trade1]).run(universe)
         result = Exposure(net=net).result(strategy)
         if net:
             # 0 2  8   2 10 18 0

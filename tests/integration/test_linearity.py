@@ -5,7 +5,7 @@
 
 # from epymetheus import Trade, TradeStrategy
 # from epymetheus.datasets import make_randomwalk
-# from epymetheus.benchmarks import RandomTrader
+# from epymetheus.benchmarks import RandomStrategy
 
 
 # params_seed = [42]
@@ -57,7 +57,7 @@
 
 
 # def make_random_trades(universe, n_trades, seed):
-#     random_trader = RandomTrader(n_trades=n_trades, seed=seed)
+#     random_trader = RandomStrategy(n_trades=n_trades, seed=seed)
 #     trades = random_trader.run(universe).trades
 #     return list(trades)  # for of array is slow
 

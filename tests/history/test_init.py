@@ -4,7 +4,7 @@ from numpy import array_equal
 
 from epymetheus import History
 from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import RandomTrader
+from epymetheus.benchmarks import RandomStrategy
 
 
 def assert_result_equal(result0, result1):
@@ -21,6 +21,6 @@ def test_init():
     Test if `History(strategy) == strategy.history`.
     """
     universe = make_randomwalk()
-    strategy = RandomTrader().run(universe)
+    strategy = RandomStrategy().run(universe)
 
     assert_result_equal(History(strategy), strategy.history)

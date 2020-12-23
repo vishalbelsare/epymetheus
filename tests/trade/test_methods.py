@@ -6,7 +6,7 @@ import pandas as pd
 import epymetheus as ep
 from epymetheus import Trade
 from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import RandomTrader
+from epymetheus.benchmarks import RandomStrategy
 
 
 class TestInit:
@@ -93,7 +93,7 @@ class TestArrayValue:
     def test_linearity_mul(self, a, seed):
         np.random.seed(seed)
         universe = make_randomwalk()
-        trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+        trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
         tradeA = a * trade0
         print(trade0, tradeA)
         result0 = trade0.array_value(universe)
@@ -151,7 +151,7 @@ class TestArrayValue:
 #     def test_linearity_mul(self, a, seed):
 #         np.random.seed(seed)
 #         universe = make_randomwalk()
-#         trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+#         trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
 #         tradeA = a * trade0
 #         result0 = trade0.array_exposure(universe)
 #         resultA = tradeA.array_exposure(universe)
@@ -209,7 +209,7 @@ class TestArrayValue:
 #     def test_linearity_mul(self, a, net, seed):
 #         np.random.seed(42)
 #         universe = make_randomwalk()
-#         trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+#         trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
 #         tradeA = a * trade0
 #         result0 = trade0.series_exposure(universe, net=net)
 #         resultA = tradeA.series_exposure(universe, net=net)
@@ -271,7 +271,7 @@ class TestSeriesPnl:
     def test_linearity_mul(self, a, seed):
         np.random.seed(42)
         universe = make_randomwalk()
-        trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+        trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
         tradeA = a * trade0
         result0 = trade0.series_pnl(universe)
         resultA = tradeA.series_pnl(universe)
@@ -292,7 +292,7 @@ class TestFinalPnl:
     def test_random(self, seed):
         np.random.seed(42)
         universe = make_randomwalk(n_bars=100, n_assets=10)
-        trade = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+        trade = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
         result = trade.final_pnl(universe)
         expected = trade.array_pnl(universe)[-1]
 
@@ -303,7 +303,7 @@ class TestFinalPnl:
     def test_linearity_mul(self, a, seed):
         np.random.seed(42)
         universe = make_randomwalk()
-        trade0 = RandomTrader(n_trades=1, seed=seed).run(universe).trades[0]
+        trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
         tradeA = a * trade0
         result0 = trade0.final_pnl(universe)
         resultA = tradeA.final_pnl(universe)

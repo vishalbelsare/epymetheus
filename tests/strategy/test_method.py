@@ -4,7 +4,7 @@ import pandas as pd
 
 import epymetheus as ep
 from epymetheus import Strategy
-from epymetheus.benchmarks import DeterminedTrader
+from epymetheus.benchmarks import DeterminedStrategy
 from epymetheus.datasets import make_randomwalk
 from epymetheus.exceptions import NoTradeError
 
