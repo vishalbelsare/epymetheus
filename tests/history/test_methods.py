@@ -7,7 +7,7 @@ from pandas.testing import assert_index_equal, assert_frame_equal
 
 from epymetheus import History
 from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import RandomTrader
+from epymetheus.benchmarks import RandomStrategy
 
 
 class TestToDataFrame:
@@ -16,11 +16,11 @@ class TestToDataFrame:
     """
 
     def _get_history(self):
-        strategy = RandomTrader(seed=42).run(make_randomwalk(42))
+        strategy = RandomStrategy(seed=42).run(make_randomwalk(42))
         return History(strategy)
 
     def _get_df_history(self):
-        strategy = RandomTrader(seed=42).run(make_randomwalk(42))
+        strategy = RandomStrategy(seed=42).run(make_randomwalk(42))
         return History(strategy).to_dataframe()
 
     def test_pandas_init(self):

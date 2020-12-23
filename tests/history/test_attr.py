@@ -5,7 +5,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from epymetheus import trade, History
 from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import DeterminedTrader, RandomTrader
+from epymetheus.benchmarks import DeterminedStrategy, RandomStrategy
 
 
 class TestBase:
@@ -15,7 +15,7 @@ class TestBase:
 
     def _get_history(self):
         universe = make_randomwalk()
-        strategy = RandomTrader(seed=42).run(universe)
+        strategy = RandomStrategy(seed=42).run(universe)
         return History(strategy)
 
     def test_strategy_attr(self):
@@ -23,7 +23,7 @@ class TestBase:
         `History.__init__` and `strategy.history` are supposed to give the same results.
         """
         universe = make_randomwalk()
-        strategy = RandomTrader(seed=42).run(universe)
+        strategy = RandomStrategy(seed=42).run(universe)
 
         result0 = pd.DataFrame(History(strategy))  # from History.__init__
         result1 = pd.DataFrame(strategy.history)  # from strategy.history
@@ -79,7 +79,7 @@ class TestColumn:
         np.random.seed(42)
 
     def _get_history(self):
-        strategy = DeterminedTrader(trades=self.trades).run(self.universe)
+        strategy = DeterminedStrategy(trades=self.trades).run(self.universe)
         return History(strategy)
 
     def test_trade_id(self):

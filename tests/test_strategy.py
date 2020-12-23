@@ -6,7 +6,7 @@ from epymetheus import create_strategy
 from epymetheus import Strategy
 
 from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import RandomTrader
+from epymetheus.benchmarks import RandomStrategy
 
 
 class MyStrategy(Strategy):
@@ -67,7 +67,7 @@ class TestStrategy:
     def test_sanity(self):
         np.random.seed(42)
         universe = make_randomwalk()
-        strategy = RandomTrader()
+        strategy = RandomStrategy()
 
         strategy.run(universe)
 
