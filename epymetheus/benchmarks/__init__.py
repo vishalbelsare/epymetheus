@@ -1,5 +1,5 @@
 # flake8: noqa
 
-from .benchmarks import BuyAndHold
-from .benchmarks import DeterminedTrader
-from .benchmarks import RandomTrader
+from .buy_and_hold import BuyAndHold
+from .determined import DeterminedStrategy
+from .random import RandomStrategy
