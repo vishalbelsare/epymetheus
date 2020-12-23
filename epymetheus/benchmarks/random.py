@@ -40,7 +40,8 @@ class RandomStrategy(Strategy):
     >>> strategy = RandomStrategy(n_trades=2, seed=42)
     >>> universe = make_randomwalk(10, 3)
     >>> strategy(universe)
-    [trade(['2'], lot=[1.], open_bar=4, shut_bar=7), trade(['2'], lot=[1.], open_bar=6, shut_bar=7)]
+    [trade(['2'], lot=[1.], open_bar=4, shut_bar=7), \
+trade(['2'], lot=[1.], open_bar=6, shut_bar=7)]
     """
 
     def __init__(
