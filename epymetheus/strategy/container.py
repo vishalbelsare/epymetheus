@@ -100,7 +100,7 @@ class StrategyList(StrategyContainer):
     def __getitem__(self, i: int) -> Strategy:
         return self.list()[i]
 
-    def __setitem__(self, i: int, strategy)->None:
+    def __setitem__(self, i: int, strategy) -> None:
         self.add_strategy(self.__get_key(i), strategy)
 
     def list(self):
