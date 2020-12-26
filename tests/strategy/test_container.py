@@ -1,13 +1,13 @@
-import pytest
-
 from collections import OrderedDict
 
-from epymetheus import trade
+import pytest
+
 from epymetheus import create_strategy
+from epymetheus import trade
+from epymetheus.benchmarks import RandomStrategy
 from epymetheus.strategy.container import StrategyContainer
 from epymetheus.strategy.container import StrategyDict
 from epymetheus.strategy.container import StrategyList
-from epymetheus.benchmarks import RandomStrategy
 
 
 class TestStrategyContainer:
@@ -127,8 +127,8 @@ class TestStrategyDict(TestStrategyContainer):
         s1 = create_strategy(lambda universe: [])
         container = StrategyDict({"s0": s0, "s1": s1})
 
-        assert container['s0'] == s0
-        assert container['s1'] == s1
+        assert container["s0"] == s0
+        assert container["s1"] == s1
 
     def test_setitem(self):
         s0 = create_strategy(lambda universe: [])
@@ -137,11 +137,11 @@ class TestStrategyDict(TestStrategyContainer):
         t1 = create_strategy(lambda universe: [])
         container = StrategyDict({"s0": s0, "s1": s1})
 
-        container['s0'] = t0
-        assert container['s0'] == t0
+        container["s0"] = t0
+        assert container["s0"] == t0
 
-        container['s1'] = t1
-        assert container['s1'] == t1
+        container["s1"] = t1
+        assert container["s1"] == t1
 
     def test_dict(self):
         s0 = create_strategy(lambda universe: [])
