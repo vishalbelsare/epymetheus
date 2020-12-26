@@ -266,7 +266,7 @@ class Strategy(abc.ABC):
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
-        return metric_from_name(metric_name).result(self)
+        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def evaluate(self, metric):
         raise DeprecationWarning(
