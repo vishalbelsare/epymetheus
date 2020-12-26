@@ -327,7 +327,7 @@ class TradewiseSharpeRatio(Metric):
         return "tradewise_sharpe_ratio"
 
     def result(self, strategy):
-        array_pnl = strategy.history.to_dataframe().groupby("trade_id").agg(sum)["pnl"]
+        array_pnl = strategy.history.groupby("trade_id").agg(sum)["pnl"]
         avg_pnl = np.mean(array_pnl)
         std_pnl = np.std(array_pnl)  # TODO parameter ddof
         result = avg_pnl / max(std_pnl, self.EPSILON)

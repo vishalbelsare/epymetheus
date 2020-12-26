@@ -7,7 +7,8 @@ import pandas as pd
 
 from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
-from epymetheus.history import History
+
+# from epymetheus.history import History
 
 
 def create_strategy(logic_func, **params):
@@ -120,9 +121,38 @@ class Strategy(abc.ABC):
     def n_orders(self):
         return sum(t.n_orders for t in self.trades)
 
+    # @property
+    # def history(self):
+    #     return History(strategy=self)
+
     @property
-    def history(self):
-        return History(strategy=self)
+    def history(self) -> pd.DataFrame:
+        """
+        Return `pandas.DataFrame` of trade history.
+
+        Returns
+        -------
+        history : pandas.DataFrame
+            Trade History.
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        data = {}
+
+        n_orders = np.array([t.n_orders for t in self.trades])
+
+        data["trade_id"] = np.repeat(np.arange(len(self.trades)), n_orders)
+        data["asset"] = np.concatenate([t.asset for t in self.trades])
+        data["lot"] = np.concatenate([t.lot for t in self.trades])
+        data["open_bar"] = np.repeat([t.open_bar for t in self.trades], n_orders)
+        data["close_bar"] = np.repeat([t.close_bar for t in self.trades], n_orders)
+        data["shut_bar"] = np.repeat([t.shut_bar for t in self.trades], n_orders)
+        data["take"] = np.repeat([t.take for t in self.trades], n_orders)
+        data["stop"] = np.repeat([t.stop for t in self.trades], n_orders)
+        data["pnl"] = np.concatenate([t.final_pnl(self.universe) for t in self.trades])
+
+        return pd.DataFrame(data)
 
     def wealth(self, universe=None) -> pd.Series:
         """
