@@ -3,7 +3,7 @@ import abc
 import numpy as np
 
 
-def _metric_from_name(name, **kwargs):
+def metric_from_name(name, **kwargs):
     """
     Initialize metric from a name.
 
@@ -17,21 +17,18 @@ def _metric_from_name(name, **kwargs):
     metric : Metric
     """
     dict_metric = {
-        "return": Return,
-        "average_return": AverageReturn,
-        "final_wealth": FinalWealth,
-        "drawdown": Drawdown,
-        "max_drawdown": MaxDrawdown,
-        "volatility": Volatility,
-        "sharpe_ratio": SharpeRatio,
-        "tradewise_sharpe_ratio": TradewiseSharpeRatio,
-        "exposure": Exposure,
+        "return": Return(),
+        "average_return": AverageReturn(),
+        "final_wealth": FinalWealth(),
+        "drawdown": Drawdown(),
+        "max_drawdown": MaxDrawdown(),
+        "volatility": Volatility(),
+        "sharpe_ratio": SharpeRatio(),
+        "tradewise_sharpe_ratio": TradewiseSharpeRatio(),
+        "net_exposure": Exposure(net=True),
+        "abs_exposure": Exposure(net=False),
     }
-
-    if name not in dict_metric.keys():
-        raise ValueError
-
-    return dict_metric[name](**kwargs)
+    return dict_metric[name]
 
 
 class Metric(abc.ABC):
