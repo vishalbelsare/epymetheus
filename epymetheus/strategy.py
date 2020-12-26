@@ -133,6 +133,9 @@ class Strategy(abc.ABC):
         wealth : pandas.Series
             Series of wealth.
         """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
         universe = universe or self.universe
 
         wealth = np.zeros_like(universe.iloc[:, 0])
