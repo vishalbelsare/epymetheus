@@ -81,15 +81,47 @@ class TestRateLose:
 
 
 class TestAvgWin:
-    ...
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+
+        tot_win = avg_win(trades, universe) * num_win(trades, universe)
+        pnls = np.array([t.final_pnl(universe) for t in trades])
+        expected = np.sum(pnls[pnls > 0])
+
+        assert tot_win == expected
 
 
 class TestAvgLose:
-    ...
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+
+        tot_win = avg_lose(trades, universe) * num_lose(trades, universe)
+        pnls = np.array([t.final_pnl(universe) for t in trades])
+        expected = np.sum(pnls[pnls < 0])
+
+        assert tot_win == expected
 
 
 class TestAvgPnl:
-    ...
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+
+        tot_pnl = avg_pnl(trades, universe) * len(trades)
+        expected = final_wealth(trades, universe).item()
+
+        assert np.isclose(tot_pnl, expected)
 
 
 class TestName:
