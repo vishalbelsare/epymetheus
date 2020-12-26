@@ -143,7 +143,8 @@ class StrategyDict(StrategyContainer):
         >>> strategy2 = create_strategy(lambda universe: [trade("B"), trade("C")])
         >>> strategy_dict = StrategyDict({"S1": strategy1, "S2": strategy2})
         >>> strategy_dict
-        StrategyDict(OrderedDict([('S1', <epymetheus.strategy.base.Strategy object at ...>), \
+        StrategyDict(OrderedDict([('S1', \
+<epymetheus.strategy.base.Strategy object at ...>), \
 ('S2', <epymetheus.strategy.base.Strategy object at ...>)]))
         """
         return f"{self.__class__.__name__}({self.dict()})"
