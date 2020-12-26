@@ -66,8 +66,8 @@ class Strategy(abc.ABC):
         return cls(logic_func=logic_func, params=params)
 
     def __call__(self, universe, to_list=True):
-        logic = getattr(self, "logic_func", self.logic)
-        trades = logic(universe, **getattr(self, "params", {}))
+        logic = self.get_logic()
+        trades = logic(universe, **self.get_params())
         if to_list:
             trades = list(trades)
         return trades
@@ -120,10 +120,6 @@ class Strategy(abc.ABC):
     @property
     def n_orders(self):
         return sum(t.n_orders for t in self.trades)
-
-    # @property
-    # def history(self):
-    #     return History(strategy=self)
 
     @property
     def history(self) -> pd.DataFrame:
@@ -232,6 +228,9 @@ class Strategy(abc.ABC):
 
         self.trades = trades
         return self
+
+    def get_logic(self):
+        return getattr(self, "logic_func", self.logic)
 
     def get_params(self) -> dict:
         """
