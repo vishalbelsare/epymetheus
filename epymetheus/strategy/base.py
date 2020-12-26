@@ -8,8 +8,7 @@ import pandas as pd
 from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
 from epymetheus.metrics import metric_from_name
-
-# from epymetheus.history import History
+from epymetheus.timeseries import wealth
 
 
 def create_strategy(logic_func, **params):
@@ -165,20 +164,7 @@ class Strategy(abc.ABC):
 
         universe = universe or self.universe
 
-        wealth = np.zeros_like(universe.iloc[:, 0])
-        for t in self.trades:
-            i_open = universe.index.get_indexer([t.open_bar]).item()
-            i_open = i_open if i_open != -1 else 0
-            i_close = universe.index.get_loc(t.close_bar)
-
-            value = t.array_value(universe).sum(axis=1)
-            pnl = value - value[i_open]
-            pnl[:i_open] = 0
-            pnl[i_close:] = pnl[i_close]
-
-            wealth += pnl
-
-        return pd.Series(wealth, index=universe.index)
+        return pd.Series(wealth(self.trades, universe), index=universe.index)
 
     def run(self, universe, verbose=True):
         """

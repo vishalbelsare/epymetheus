@@ -1,80 +1,115 @@
-import pytest
-
 import numpy as np
 import pandas as pd
+import pytest
 
-import epymetheus as ep
-from epymetheus import Trade
-from epymetheus.exceptions import NotRunError
-from epymetheus.benchmarks import RandomStrategy, DeterminedStrategy
+from epymetheus import trade
+from epymetheus.benchmarks import RandomStrategy
 from epymetheus.datasets import make_randomwalk
-from epymetheus.metrics import Return
-from epymetheus.metrics import AverageReturn
-from epymetheus.metrics import FinalWealth
-from epymetheus.metrics import Drawdown
-from epymetheus.metrics import MaxDrawdown
-from epymetheus.metrics import Volatility
-from epymetheus.metrics import SharpeRatio
-from epymetheus.metrics import TradewiseSharpeRatio
-from epymetheus.metrics import Exposure
+from epymetheus.metrics import avg_lose
+from epymetheus.metrics import avg_pnl
+from epymetheus.metrics import avg_win
+from epymetheus.metrics import final_wealth
 from epymetheus.metrics import metric_from_name
+from epymetheus.metrics import num_lose
+from epymetheus.metrics import num_win
+from epymetheus.metrics import rate_lose
+from epymetheus.metrics import rate_win
 
 
-# class TestBase:
-#     """
-#     Test common features of Metric.
-#     """
+class TestFinalWealth:
+    def test(self):
+        np.random.seed(42)
+        universe = make_randomwalk()
+        strategy = RandomStrategy().run(universe)
 
-#     @pytest.fixture(scope="function", autouse=True)
-#     def setup(self):
-#         np.random.seed(42)
+        result = final_wealth(strategy.trades, universe)
+        expected = strategy.wealth().iat[-1]
 
-#     @pytest.mark.parametrize("MetricClass", params_metric)
-#     @pytest.mark.parametrize("seed", range(1))
-#     def test_strategy_score(self, MetricClass, seed):
-#         """
-#         Test if `strategy.score(metric) == metric.result(strategy)`
-#         """
-#         m = MetricClass()
-#         strategy = RandomStrategy(seed=seed).run(make_randomwalk())
-#         result0 = np.array(m.result(strategy))  # from metric method
-#         result1 = np.array(strategy.score(m))  # from strategy method
-#         assert np.equal(result0, result1).all()
+        assert result == expected
 
-#     @pytest.mark.parametrize("MetricClass", params_metric)
-#     @pytest.mark.parametrize("seed", range(1))
-#     def test_call(self, MetricClass, seed):
-#         """
-#         Test if `metric.result(strategy) == metric(strategy)`.
-#         """
-#         m = MetricClass()
-#         strategy = RandomStrategy(seed=seed).run(make_randomwalk())
-#         result0 = np.array(m.result(strategy))  # from `result` method
-#         result1 = np.array(m(strategy))  # from __call__
-#         assert np.equal(result0, result1).all()
 
-#     # @pytest.mark.parametrize("MetricClass", params_metric)
-#     # def test_metric_from_name(self, MetricClass):
-#     #     m = MetricClass()
-#     #     assert metric_from_name(m.name).__class__ == m.__class__
+class TestNumWin:
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+        result = num_win(trades, universe)
+        expected = (lots > 0).sum()
 
-#     def test_metric_from_name_nonexistent(self):
-#         """
-#         `_metric_from_name` is supposed to raise ValueError
-#         when one gives it a nonexistent metric name.
-#         """
-#         with pytest.raises(KeyError):
-#             metric_from_name("nonexistent_metric")
+        assert result == expected
 
-#     @pytest.mark.parametrize("MetricClass", params_metric)
-#     def test_notrunerror(self, MetricClass):
-#         """
-#         Metric is supposed to raise NotRunError when one tries to score it
-#         for a strategy which has not been run yet.
-#         """
-#         m = MetricClass()
-#         with pytest.raises(NotRunError):
-#             RandomStrategy(seed=42).score(m)
+
+class TestNumLose:
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+        metric = num_lose(trades, universe)
+        expected = (lots <= 0).sum()
+
+        assert metric == expected
+
+
+class TestRateWin:
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+        metric = rate_win(trades, universe)
+        expected = (lots > 0).sum() / len(trades)
+
+        assert metric == expected
+
+
+class TestRateLose:
+    def test(self):
+        np.random.seed(42)
+        universe = pd.DataFrame({"A": range(100)})
+        lots = np.random.randn(100)
+        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [t.execute(universe) for t in trades]
+        metric = rate_lose(trades, universe)
+        expected = (lots <= 0).sum() / len(trades)
+
+        assert metric == expected
+
+
+class TestAvgWin:
+    ...
+
+
+class TestAvgLose:
+    ...
+
+
+class TestAvgPnl:
+    ...
+
+
+class TestName:
+    """
+    Test `metric_from_name`.
+    """
+
+    def test(self):
+        assert metric_from_name("final_wealth") == final_wealth
+        assert metric_from_name("num_win") == num_win
+        assert metric_from_name("num_lose") == num_lose
+        assert metric_from_name("avg_win") == avg_win
+        assert metric_from_name("avg_lose") == avg_lose
+        assert metric_from_name("avg_pnl") == avg_pnl
+        assert metric_from_name("rate_win") == rate_win
+        assert metric_from_name("rate_lose") == rate_lose
+
+    def test_non_existent(self):
+        with pytest.raises(KeyError):
+            metric_from_name("non_existent_metric")
 
 
 # class TestReturn:
