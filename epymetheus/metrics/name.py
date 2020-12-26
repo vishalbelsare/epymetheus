@@ -13,13 +13,13 @@ def metric_from_name(name: str):
     Return metrics from name.
     """
     metrics = (
-        final_wealth,
-        num_win,
-        num_lose,
-        rate_win,
-        rate_lose,
-        avg_win,
         avg_lose,
         avg_pnl,
+        avg_win,
+        final_wealth,
+        num_lose,
+        num_win,
+        rate_lose,
+        rate_win,
     )
     return {m.__name__: m for m in metrics}[name]

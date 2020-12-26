@@ -98,14 +98,14 @@ class TestName:
     """
 
     def test(self):
-        assert metric_from_name("final_wealth") == final_wealth
-        assert metric_from_name("num_win") == num_win
-        assert metric_from_name("num_lose") == num_lose
-        assert metric_from_name("avg_win") == avg_win
         assert metric_from_name("avg_lose") == avg_lose
         assert metric_from_name("avg_pnl") == avg_pnl
-        assert metric_from_name("rate_win") == rate_win
+        assert metric_from_name("avg_win") == avg_win
+        assert metric_from_name("final_wealth") == final_wealth
+        assert metric_from_name("num_lose") == num_lose
+        assert metric_from_name("num_win") == num_win
         assert metric_from_name("rate_lose") == rate_lose
+        assert metric_from_name("rate_win") == rate_win
 
     def test_non_existent(self):
         with pytest.raises(KeyError):
