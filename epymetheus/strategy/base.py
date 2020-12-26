@@ -7,6 +7,7 @@ import pandas as pd
 
 from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
+from epymetheus.metrics import metric_from_name
 
 # from epymetheus.history import History
 
@@ -267,7 +268,7 @@ class Strategy(abc.ABC):
 
         return self
 
-    def score(self, metric):
+    def score(self, metric_name):
         """
         Returns the value of a metric of self.
 
@@ -279,7 +280,7 @@ class Strategy(abc.ABC):
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
-        return metric.result(self)
+        return metric_from_name(metric_name).result(self)
 
     def evaluate(self, metric):
         raise DeprecationWarning(

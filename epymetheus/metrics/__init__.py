@@ -9,4 +9,4 @@ from .metrics import Return
 from .metrics import SharpeRatio
 from .metrics import TradewiseSharpeRatio
 from .metrics import Volatility
-from .metrics import _metric_from_name
+from .metrics import metric_from_name
