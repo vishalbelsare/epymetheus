@@ -119,13 +119,12 @@ Trade history can be viewed as:
 ```python
 df_history = my_strategy.history()
 df_history.head()
-#           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop        pnl
-# order_id
-# 0                0  AAPL  116.0 2000-01-03 2005-01-07     None  20.0 -10.0  23.539759
-# 1                1  AAPL  130.0 2000-02-01 2000-09-29     None  20.0 -10.0 -48.416516
-# 2                2  AAPL  100.0 2000-03-01 2005-07-14     None  20.0 -10.0  24.972236
-# 3                3  AAPL   98.0 2000-04-03 2005-07-14     None  20.0 -10.0  22.226735
-# 4                4  AAPL  105.0 2000-05-01 2005-05-19     None  20.0 -10.0  20.766138
+#    trade_id asset    lot      entry      close  exit  take  stop        pnl
+# 0         0  AAPL  115.0 2000-01-03 2005-01-07  None  20.0 -10.0  23.527901
+# 1         1  AAPL  129.0 2000-02-01 2000-09-29  None  20.0 -10.0 -48.437450
+# 2         2  AAPL   99.0 2000-03-01 2005-07-14  None  20.0 -10.0  24.924913
+# 3         3  AAPL   97.0 2000-04-03 2005-07-14  None  20.0 -10.0  22.180065
+# 4         4  AAPL  104.0 2000-05-01 2005-05-19  None  20.0 -10.0  20.736752
 ```
 
 The time-series of wealth can be viewed as:
