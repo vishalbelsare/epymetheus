@@ -1,7 +1,9 @@
 import numpy as np
 
 
-def generate_brownian(n_steps, n_paths, volatility, init_value=0.0, dt=1.0, drift=0.0):
+def generate_brownian(
+    n_steps, n_paths, volatility, init_value=0.0, dt=1.0, drift=0.0
+) -> np.array:
     """
     Examples
     --------
@@ -29,7 +31,7 @@ def generate_brownian(n_steps, n_paths, volatility, init_value=0.0, dt=1.0, drif
 
 def generate_geometric_brownian(
     n_steps, n_paths, volatility, init_value=1.0, dt=1.0, drift=0.0
-):
+) -> np.array:
     """
     Examples
     --------

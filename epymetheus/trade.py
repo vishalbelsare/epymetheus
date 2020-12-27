@@ -364,12 +364,7 @@ class Trade:
 
         Returns
         -------
-        pnl : numpy.array, shapr (n_orders, )
-
-        Raises
-        ------
-        ValueError
-            If self has not been `run`.
+        pnl : numpy.array, shape (n_orders, )
 
         Examples
         --------
