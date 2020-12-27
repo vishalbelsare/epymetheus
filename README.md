@@ -76,13 +76,8 @@ def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
         # Find the maximum number of shares that I can buy with my allowance
         n_shares = allowance // universe.at[date, cheapest_stock]
 
-        trade = n_shares * ep.trade(
-            cheapest_stock,
-            open_bar=date,
-            take=profit_take,
-            stop=stop_loss,
-        )
-        trades.append(trade)
+        t = n_shares * trade(cheapest_stock, date, take=profit_take, stop=stop_loss)
+        trades.append(t)
 
     return trades
 ```
@@ -122,8 +117,8 @@ my_strategy.run(universe)
 Trade history can be viewed as:
 
 ```python
-history = my_strategy.history.to_dataframe()
-history.head()
+df_history = my_strategy.history()
+df_history.head()
 #           trade_id asset    lot   open_bar  close_bar shut_bar  take  stop        pnl
 # order_id
 # 0                0  AAPL  116.0 2000-01-03 2005-01-07     None  20.0 -10.0  23.539759
@@ -153,16 +148,19 @@ series_wealth.head()
 You can quickly `score()` the metrics of the strategy.
 
 ```python
-from epymetheus.metrics import Drawdown
-from epymetheus.metrics import MaxDrawdown
-from epymetheus.metrics import SharpeRatio
+my_strategy.score("final_wealth")
+# 3216.74
+my_strategy.score("max_drawdown")
+# -989.19
+```
 
+You may compute various time-series.
 
-drawdown = my_strategy.score(Drawdown())
-max_drawdown = my_strategy.score(MaxDrawdown())
-net_exposure = my_strategy.score(Exposure(net=True))
-abs_exposure = my_strategy.score(Exposure(net=False))
-sharpe_ratio = my_strategy.score(SharpeRatio())
+```python
+from epymetheus import ts
+
+drawdown = ts.drawdown(my_strategy.trades, universe)
+net_exposure = ts.net_exposure(my_strategy.trades, universe)
 ```
 
 ![drawdown](examples/readme/drawdown.png)
@@ -197,7 +195,7 @@ study = optuna.create_study(direction="maximize")
 study.optimize(objective, n_trials=100)
 
 study.best_params
-# {'profit_take': 100, 'stop_loss': -100}
+# {'profit_take': 100, 'stop_loss': -42}
 ```
 
 ### Pair trading

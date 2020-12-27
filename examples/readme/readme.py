@@ -1,7 +1,7 @@
 import sys
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn
 
 
@@ -15,29 +15,9 @@ if __name__ == "__main__":
 
     # ---
 
-    import pandas as pd
     import epymetheus as ep
-
-    def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
-        # I get $100 allowance on the first business day of each month
-        allowance = 100
-
-        trades = []
-        for date in pd.date_range(universe.index[0], universe.index[-1], freq="BMS"):
-            cheapest_stock = universe.loc[date].idxmin()
-
-            # Find the maximum number of shares that I can buy with my allowance
-            n_shares = allowance // universe.at[date, cheapest_stock]
-
-            trade = n_shares * ep.trade(
-                cheapest_stock,
-                open_bar=date,
-                take=profit_take,
-                stop=stop_loss,
-            )
-            trades.append(trade)
-
-        return trades
+    import pandas as pd
+    from epymetheus.benchmarks import dumb_strategy
 
     # ---
 
@@ -56,12 +36,10 @@ if __name__ == "__main__":
 
     # ---
 
-    history = my_strategy.history.to_dataframe()
-    history.head()
-    print(">>> history.head()")
-    print_as_comment(history.head())
-
-    print(sum(history.pnl))
+    df_history = my_strategy.history()
+    df_history.head()
+    print(">>> df_history.head()")
+    print_as_comment(df_history.head())
 
     # ---
 
@@ -79,16 +57,18 @@ if __name__ == "__main__":
 
     # ---
 
-    from epymetheus.metrics import Drawdown
-    from epymetheus.metrics import Exposure
-    from epymetheus.metrics import MaxDrawdown
-    from epymetheus.metrics import SharpeRatio
+    print(">>> my_strategy.score('final_wealth')")
+    print_as_comment(my_strategy.score("final_wealth"))
+    print(">>> my_strategy.score('max_drawdown')")
+    print_as_comment(my_strategy.score("max_drawdown"))
+    # my_strategy.score("sharpe_ratio")
 
-    drawdown = my_strategy.score(Drawdown())
-    max_drawdown = my_strategy.score(MaxDrawdown())
-    net_exposure = my_strategy.score(Exposure(net=True))
-    abs_exposure = my_strategy.score(Exposure(net=False))
-    sharpe_ratio = my_strategy.score(SharpeRatio())
+    # ---
+
+    from epymetheus import ts
+
+    drawdown = ts.drawdown(my_strategy.trades, universe)
+    net_exposure = ts.net_exposure(my_strategy.trades, universe)
 
     plt.figure(figsize=(16, 4))
     plt.plot(pd.Series(drawdown, index=universe.index), linewidth=1)
@@ -107,7 +87,7 @@ if __name__ == "__main__":
     # ---
 
     plt.figure(figsize=(16, 4))
-    plt.hist(my_strategy.history.pnl, bins=100)
+    plt.hist(my_strategy.history().pnl, bins=100)
     plt.axvline(0, ls="--", color="k")
     plt.xlabel("profit and loss")
     plt.ylabel("number of trades")

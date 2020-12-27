@@ -5,9 +5,10 @@ from time import time
 import numpy as np
 import pandas as pd
 
-from epymetheus.exceptions import NoTradeError
-from epymetheus.exceptions import NotRunError
-from epymetheus.history import History
+from .. import ts
+from ..exceptions import NoTradeError
+from ..exceptions import NotRunError
+from ..metrics import metric_from_name
 
 
 def create_strategy(logic_func, **params):
@@ -65,8 +66,8 @@ class Strategy(abc.ABC):
         return cls(logic_func=logic_func, params=params)
 
     def __call__(self, universe, to_list=True):
-        logic = getattr(self, "logic_func", self.logic)
-        trades = logic(universe, **getattr(self, "params", {}))
+        logic = self.get_logic()
+        trades = logic(universe, **self.get_params())
         if to_list:
             trades = list(trades)
         return trades
@@ -120,11 +121,35 @@ class Strategy(abc.ABC):
     def n_orders(self):
         return sum(t.n_orders for t in self.trades)
 
-    @property
-    def history(self):
-        return History(strategy=self)
+    def history(self) -> pd.DataFrame:
+        """
+        Return `pandas.DataFrame` of trade history.
 
-    def wealth(self, universe=None) -> pd.Series:
+        Returns
+        -------
+        history : pandas.DataFrame
+            Trade History.
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        data = {}
+
+        n_orders = np.array([t.n_orders for t in self.trades])
+
+        data["trade_id"] = np.repeat(np.arange(len(self.trades)), n_orders)
+        data["asset"] = np.concatenate([t.asset for t in self.trades])
+        data["lot"] = np.concatenate([t.lot for t in self.trades])
+        data["entry"] = np.repeat([t.entry for t in self.trades], n_orders)
+        data["close"] = np.repeat([t.close for t in self.trades], n_orders)
+        data["exit"] = np.repeat([t.exit for t in self.trades], n_orders)
+        data["take"] = np.repeat([t.take for t in self.trades], n_orders)
+        data["stop"] = np.repeat([t.stop for t in self.trades], n_orders)
+        data["pnl"] = np.concatenate([t.final_pnl(self.universe) for t in self.trades])
+
+        return pd.DataFrame(data)
+
+    def wealth(self) -> pd.Series:
         """
         Return `pandas.Series` of wealth.
 
@@ -133,22 +158,41 @@ class Strategy(abc.ABC):
         wealth : pandas.Series
             Series of wealth.
         """
-        universe = universe or self.universe
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
 
-        wealth = np.zeros_like(universe.iloc[:, 0])
-        for t in self.trades:
-            i_open = universe.index.get_indexer([t.open_bar]).item()
-            i_open = i_open if i_open != -1 else 0
-            i_close = universe.index.get_loc(t.close_bar)
+        return pd.Series(
+            ts.wealth(self.trades, self.universe), index=self.universe.index
+        )
 
-            value = t.array_value(universe).sum(axis=1)
-            pnl = value - value[i_open]
-            pnl[:i_open] = 0
-            pnl[i_close:] = pnl[i_close]
+    def drawdown(self) -> pd.Series:
+        """
+        Returns
+        -------
+        drawdown : pandas.Series
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
 
-            wealth += pnl
+        drawdown = ts.drawdown(self.trades, self.universe)
 
-        return pd.Series(wealth, index=universe.index)
+        return pd.Series(drawdown, index=self.universe.index)
+
+    def net_exposure(self) -> pd.Series:
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        exposure = ts.net_exposure(self.trades, self.universe)
+
+        return pd.Series(exposure, index=self.universe.index)
+
+    def abs_exposure(self) -> pd.Series:
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        exposure = ts.abs_exposure(self.trades, self.universe)
+
+        return pd.Series(exposure, index=self.universe.index)
 
     def run(self, universe, verbose=True):
         """
@@ -200,6 +244,9 @@ class Strategy(abc.ABC):
         self.trades = trades
         return self
 
+    def get_logic(self):
+        return getattr(self, "logic_func", self.logic)
+
     def get_params(self) -> dict:
         """
         Set the parameters of this strategy.
@@ -235,7 +282,7 @@ class Strategy(abc.ABC):
 
         return self
 
-    def score(self, metric):
+    def score(self, metric_name):
         """
         Returns the value of a metric of self.
 
@@ -247,7 +294,7 @@ class Strategy(abc.ABC):
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
-        return metric.result(self)
+        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def evaluate(self, metric):
         raise DeprecationWarning(

@@ -3,7 +3,7 @@
 # import numpy as np
 
 # from epymetheus.datasets import make_randomwalk
-# from epymetheus.benchmarks import RandomTrader, SingleTradeStrategy
+# from epymetheus.benchmarks import RandomStrategy, SingleTradeStrategy
 
 
 # params_seed = [42]
@@ -21,7 +21,7 @@
 #     -------
 #     trade : Trade
 #     """
-#     random_trader = RandomTrader(
+#     random_trader = RandomStrategy(
 #         n_trades=1,
 #         max_n_orders=max_n_orders,
 #         seed=seed,

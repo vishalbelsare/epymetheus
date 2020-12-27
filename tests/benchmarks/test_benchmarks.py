@@ -2,8 +2,10 @@ import pytest
 
 import pandas as pd
 
-from epymetheus import Trade
+from epymetheus import create_strategy
 from epymetheus.benchmarks import BuyAndHold
+from epymetheus.benchmarks import dumb_strategy
+from epymetheus.datasets import make_randomwalk
 
 
 class TestBuyAndHold:
@@ -14,5 +16,14 @@ class TestBuyAndHold:
         assert len(strategy.trades) == 1
         assert (strategy.trades[0].asset == ["A", "B"]).all()
         assert (strategy.trades[0].lot == [0.5 / 1, 0.5 / 2]).all()
-        assert strategy.trades[0].open_bar == 0
-        assert strategy.trades[0].close_bar == 2
+        assert strategy.trades[0].entry == 0
+        assert strategy.trades[0].close == 2
+
+
+class TestDumbStrategy:
+
+    def test(self):
+        universe = make_randomwalk()
+        universe.index = pd.date_range("2000-01-01", "2020-12-31")[:universe.index.size]
+        strategy = create_strategy(dumb_strategy, profit_take=2.0, stop_loss=-1.0)
+        strategy.run(universe)
