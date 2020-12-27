@@ -187,7 +187,7 @@ def objective(trial):
         stop_loss=stop_loss,
     ).run(universe, verbose=False)
 
-    return my_strategy.score(FinalWealth())
+    return my_strategy.score("final_wealth")
 
 
 study = optuna.create_study(direction="maximize")
