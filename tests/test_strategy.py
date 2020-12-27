@@ -1,14 +1,33 @@
-import pytest
-
 import numpy as np
 import pandas as pd
-from epymetheus import trade
-from epymetheus import create_strategy
+import pytest
+
 from epymetheus import Strategy
-from epymetheus.exceptions import NotRunError
-from epymetheus.datasets import make_randomwalk
-from epymetheus.benchmarks import RandomStrategy
+from epymetheus import create_strategy
+from epymetheus import trade
 from epymetheus.benchmarks import DeterminedStrategy
+from epymetheus.benchmarks import RandomStrategy
+from epymetheus.datasets import make_randomwalk
+from epymetheus.exceptions import NotRunError
+from epymetheus.metrics import avg_lose
+from epymetheus.metrics import avg_pnl
+from epymetheus.metrics import avg_win
+from epymetheus.metrics import final_wealth
+from epymetheus.metrics import num_lose
+from epymetheus.metrics import num_win
+from epymetheus.metrics import rate_lose
+from epymetheus.metrics import rate_win
+
+metrics = [
+    avg_lose,
+    avg_pnl,
+    avg_win,
+    final_wealth,
+    num_lose,
+    num_win,
+    rate_lose,
+    rate_win,
+]
 
 
 class MyStrategy(Strategy):
@@ -61,12 +80,10 @@ class TestStrategy:
         with pytest.raises(ValueError):
             strategy.set_params(nonexistent_param=1.0)
 
-    def test_warn(self):
-        strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
-        with pytest.raises(DeprecationWarning):
-            strategy.evaluate(None)
-
-    def test_sanity(self):
+    def test_wealth_sanity(self):
+        """
+        wealth[-1] == sum(pnl)
+        """
         np.random.seed(42)
         universe = make_randomwalk()
         strategy = RandomStrategy()
@@ -133,6 +150,31 @@ class TestStrategy:
         with pytest.raises(NotRunError):
             # epymetheus.exceptions.NotRunError: Strategy has not been run
             strategy.wealth()
+
+    @pytest.mark.parametrize("metric", metrics)
+    def test_score(self, metric):
+        np.random.seed(42)
+        universe = make_randomwalk()
+        strategy = RandomStrategy().run(universe)
+        result = strategy.score(metric.__name__)
+        expected = metric(strategy.trades, universe)
+
+        assert result == expected
+
+    @pytest.mark.parametrize("metric", metrics)
+    def test_score_notrunerror(self, metric):
+        strategy = RandomStrategy()
+
+        with pytest.raises(NotRunError):
+            strategy.score(metric)
+
+    def test_score_deprecation_warning(self):
+        """
+        `strategy.evaluate` is deprecated
+        """
+        strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
+        with pytest.raises(DeprecationWarning):
+            strategy.evaluate(None)
 
 
 # import pytest

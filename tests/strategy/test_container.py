@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import re
 
 import pytest
 
@@ -70,6 +71,14 @@ class TestStrategyContainer:
         container.add_strategy("s1", s1)
         assert container._strategies == OrderedDict({"s0": s0, "s1": s1})
 
+    def test_add_strategy_typeerror(self):
+        s = create_strategy(lambda universe: [])
+        container = StrategyContainer()
+        with pytest.raises(TypeError):
+            container.add_strategy(0, s)
+        with pytest.raises(TypeError):
+            container.add_strategy("name", None)
+
     def test_logic(self):
         s0 = create_strategy(lambda universe: [trade("A")])
         s1 = create_strategy(lambda universe: [trade("B"), trade("C")])
@@ -81,6 +90,13 @@ class TestStrategyContainer:
 
 
 class TestStrategyList(TestStrategyContainer):
+
+    def test_repr(self):
+        s0 = create_strategy(lambda universe: [])
+        s1 = create_strategy(lambda universe: [])
+        container = StrategyList([s0, s1])
+        assert re.match(r'StrategyList\(\[<.+>, <.+>\]\)', repr(container))
+
     def test_getitem(self):
         s0 = create_strategy(lambda universe: [])
         s1 = create_strategy(lambda universe: [])
@@ -109,12 +125,10 @@ class TestStrategyList(TestStrategyContainer):
 
         assert container.list() == [s0, s1]
 
-    def append(self):
+    def test_append(self):
         s0 = create_strategy(lambda universe: [])
         s1 = create_strategy(lambda universe: [])
-        container = StrategyContainer()
-        assert container == OrderedDict()
-
+        container = StrategyList([])
         container.append(s0)
         assert container[0] == s0
         container.append(s1)
@@ -122,6 +136,13 @@ class TestStrategyList(TestStrategyContainer):
 
 
 class TestStrategyDict(TestStrategyContainer):
+    def test_repr(self):
+        s0 = create_strategy(lambda universe: [])
+        s1 = create_strategy(lambda universe: [])
+        container = StrategyDict({"s0": s0, "s1": s1})
+        expected = r"StrategyDict\(OrderedDict\(\[\('s0', <.+>\), \('s1', <.+>\)\]\)\)"
+        assert re.match(expected, repr(container))
+
     def test_getitem(self):
         s0 = create_strategy(lambda universe: [])
         s1 = create_strategy(lambda universe: [])
