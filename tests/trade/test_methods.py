@@ -39,6 +39,12 @@ class TestInit:
         assert trade.asset.shape == (2,)
         assert trade.lot.shape == (2,)
 
+    def test_deprecation(self):
+        with pytest.raises(DeprecationWarning):
+            ep.trade("A", open_bar=0)
+        with pytest.raises(DeprecationWarning):
+            ep.trade("A", shut_bar=0)
+
 
 class TestExecute:
     pass
@@ -57,8 +63,8 @@ class TestArrayValue:
         index=range(7),
         dtype=float,
     )
-    trade0 = ep.trade(["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
-    trade1 = ep.trade(["A1", "A0"], lot=[-3, 2], open_bar=1, shut_bar=3)
+    trade0 = ep.trade(["A0", "A1"], lot=[2, -3], entry=1, exit=3)
+    trade1 = ep.trade(["A1", "A0"], lot=[-3, 2], entry=1, exit=3)
     expected0 = [[6, -6], [2, -21], [8, -3], [2, -24], [10, -6], [18, -24], [4, -3]]
     expected1 = [[-6, 6], [-21, 2], [-3, 8], [-24, 2], [-6, 10], [-24, 18], [-3, 4]]
 
@@ -71,7 +77,7 @@ class TestArrayValue:
         assert np.allclose(result, expected)
 
     def test_value_zero(self):
-        trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], open_bar=1, shut_bar=3)
+        trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
         result = trade.array_value(self.universe_hand)
         expected = np.zeros((len(self.universe_hand.index), 2))
         assert np.allclose(result, expected)
@@ -80,9 +86,9 @@ class TestArrayValue:
     def test_linearity_add(self, seed):
         np.random.seed(seed)
         lot0, lot1 = np.random.random(2)
-        trade0 = ep.trade("A0", lot=lot0, open_bar=1, shut_bar=3)
-        trade1 = ep.trade("A0", lot=lot1, open_bar=1, shut_bar=3)
-        tradeA = ep.trade("A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
+        trade0 = ep.trade("A0", lot=lot0, entry=1, exit=3)
+        trade1 = ep.trade("A0", lot=lot1, entry=1, exit=3)
+        tradeA = ep.trade("A0", lot=lot0 + lot1, entry=1, exit=3)
         result0 = trade0.array_value(self.universe_hand)
         result1 = trade1.array_value(self.universe_hand)
         resultA = tradeA.array_value(self.universe_hand)
@@ -115,8 +121,8 @@ class TestArrayValue:
 #         dtype=float,
 #     )
 
-#     trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
-#     trade1 = ep.trade(asset=["A1", "A0"], lot=[-3, 2], open_bar=1, shut_bar=3)
+#     trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], entry=1, exit=3)
+#     trade1 = ep.trade(asset=["A1", "A0"], lot=[-3, 2], entry=1, exit=3)
 #     expected0 = [[0, 0], [2, -21], [8, -3], [2, -24], [0, 0], [0, 0], [0, 0]]
 #     expected1 = [[0, 0], [-21, 2], [-3, 8], [-24, 2], [0, 0], [0, 0], [0, 0]]
 
@@ -129,7 +135,7 @@ class TestArrayValue:
 #         assert np.allclose(result, expected)
 
 #     def test_value_zero(self):
-#         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], open_bar=1, shut_bar=3)
+#         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
 #         result = trade.array_exposure(self.universe_hand)
 #         expected = np.zeros((len(self.universe_hand.index), 2))
 #         assert np.allclose(result, expected)
@@ -138,9 +144,9 @@ class TestArrayValue:
 #     def test_linearity_add(self, seed):
 #         np.random.seed(seed)
 #         lot0, lot1 = np.random.random(2)
-#         trade0 = ep.trade(asset="A0", lot=lot0, open_bar=1, shut_bar=3)
-#         trade1 = ep.trade(asset="A0", lot=lot1, open_bar=1, shut_bar=3)
-#         tradeA = ep.trade(asset="A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
+#         trade0 = ep.trade(asset="A0", lot=lot0, entry=1, exit=3)
+#         trade1 = ep.trade(asset="A0", lot=lot1, entry=1, exit=3)
+#         tradeA = ep.trade(asset="A0", lot=lot0 + lot1, entry=1, exit=3)
 #         result0 = trade0.array_exposure(self.universe_hand)
 #         result1 = trade1.array_exposure(self.universe_hand)
 #         resultA = tradeA.array_exposure(self.universe_hand)
@@ -174,7 +180,7 @@ class TestArrayValue:
 
 #     @pytest.mark.parametrize("net", [True, False])
 #     def test_hand(self, net):
-#         trade = ep.trade(asset=["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
+#         trade = ep.trade(asset=["A0", "A1"], lot=[2, -3], entry=1, exit=3)
 #         result = trade.series_exposure(net=net, universe=self.universe_hand)
 #         if net:
 #             expected = [0, -19, 5, -22, 0, 0, 0]
@@ -184,7 +190,7 @@ class TestArrayValue:
 #         assert np.allclose(result, expected)
 
 #     def test_value_zero(self):
-#         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], open_bar=1, shut_bar=3)
+#         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
 #         result = trade.series_exposure(self.universe_hand)
 #         expected = np.zeros((len(self.universe_hand.index)))
 #         assert np.allclose(result, expected)
@@ -195,9 +201,9 @@ class TestArrayValue:
 #     def test_linearity_add(self, net, seed):
 #         np.random.seed(seed)
 #         lot0, lot1 = np.random.random(2)
-#         trade0 = ep.trade(asset="A0", lot=lot0, open_bar=1, shut_bar=3)
-#         trade1 = ep.trade(asset="A0", lot=lot1, open_bar=1, shut_bar=3)
-#         tradeA = ep.trade(asset="A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
+#         trade0 = ep.trade(asset="A0", lot=lot0, entry=1, exit=3)
+#         trade1 = ep.trade(asset="A0", lot=lot1, entry=1, exit=3)
+#         tradeA = ep.trade(asset="A0", lot=lot0 + lot1, entry=1, exit=3)
 #         result0 = trade0.series_exposure(self.universe_hand, net=net)
 #         result1 = trade1.series_exposure(self.universe_hand, net=net)
 #         resultA = tradeA.series_exposure(self.universe_hand, net=net)
@@ -240,7 +246,7 @@ class TestSeriesPnl:
         index=range(7),
         dtype=float,
     )
-    trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], open_bar=1, shut_bar=3)
+    trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], entry=1, exit=3)
     expected0 = [0, 0, 24, -3, -3, -3, -3]
 
     @pytest.mark.parametrize("trade, expected", [(trade0, expected0)])
@@ -249,7 +255,7 @@ class TestSeriesPnl:
         assert np.allclose(result, expected)
 
     def test_value_zero(self):
-        trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], open_bar=1, shut_bar=3)
+        trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
         result = trade.series_pnl(self.universe_hand)
         expected = np.zeros(len((self.universe_hand.index)))
         assert np.allclose(result, expected)
@@ -258,9 +264,9 @@ class TestSeriesPnl:
     def test_linearity_add(self, seed):
         np.random.seed(seed)
         lot0, lot1 = np.random.random(2)
-        trade0 = ep.trade(asset="A0", lot=lot0, open_bar=1, shut_bar=3)
-        trade1 = ep.trade(asset="A0", lot=lot1, open_bar=1, shut_bar=3)
-        tradeA = ep.trade(asset="A0", lot=lot0 + lot1, open_bar=1, shut_bar=3)
+        trade0 = ep.trade(asset="A0", lot=lot0, entry=1, exit=3)
+        trade1 = ep.trade(asset="A0", lot=lot1, entry=1, exit=3)
+        tradeA = ep.trade(asset="A0", lot=lot0 + lot1, entry=1, exit=3)
         result0 = trade0.series_pnl(self.universe_hand)
         result1 = trade1.series_pnl(self.universe_hand)
         resultA = tradeA.series_pnl(self.universe_hand)
@@ -319,11 +325,11 @@ class TestRepr:
         trade = ep.trade("A")
         assert repr(trade) == "trade(['A'], lot=[1.])"
 
-        trade = ep.trade("A", lot=2, take=3.0, stop=-3.0, open_bar="B0", shut_bar="B1")
+        trade = ep.trade("A", lot=2, take=3.0, stop=-3.0, entry="B0", exit="B1")
 
         assert (
             repr(trade)
-            == "trade(['A'], lot=[2], open_bar=B0, shut_bar=B1, take=3.0, stop=-3.0)"
+            == "trade(['A'], lot=[2], entry=B0, exit=B1, take=3.0, stop=-3.0)"
         )
 
 
@@ -336,18 +342,18 @@ class TestRepr:
 #     -----
 #     - trade.take is None
 #     - trade.stop is None
-#     - trade.shut_bar is not None
+#     - trade.exit is not None
 
 #     Expected Result
 #     ---------------
-#     trade.close_bar == universe.shut_bar
+#     trade.close_bar == universe.exit
 #     """
-#     # shut_bar is not None
+#     # exit is not None
 #     universe = make_randomwalk(seed=seed)
 #     trade = make_random_trade(universe, seed=seed)
 #     trade.execute(universe)
 
-#     assert trade.close_bar == trade.shut_bar
+#     assert trade.close_bar == trade.exit
 
 
 # @pytest.mark.parametrize("seed", params_seed)
@@ -359,16 +365,16 @@ class TestRepr:
 #     -----
 #     - trade.take is None
 #     - trade.stop is None
-#     - trade.shut_bar is None
+#     - trade.exit is None
 
 #     Expected Result
 #     ---------------
 #     trade.close_bar == universe.bars[-1]
 #     """
-#     # shut_bar is not None
+#     # exit is not None
 #     universe = make_randomwalk(seed=seed)
 #     trade = make_random_trade(universe, seed=seed)
-#     trade.shut_bar = None
+#     trade.exit = None
 #     trade.execute(universe)
 
 #     assert trade.close_bar == universe.bars[-1]
@@ -383,16 +389,16 @@ class TestRepr:
 #     -----
 #     - trade.take is None
 #     - trade.stop is None
-#     - trade.shut_bar is None
+#     - trade.exit is None
 
 #     Expected Result
 #     ---------------
 #     trade.close_bar == universe.bars[-1]
 #     """
-#     # shut_bar is not None
+#     # exit is not None
 #     universe = make_randomwalk(seed=seed)
 #     trade = make_random_trade(universe, seed=seed)
-#     trade.shut_bar = None
+#     trade.exit = None
 #     trade.execute(universe)
 
 #     assert trade.close_bar == universe.bars[-1]
@@ -415,17 +421,17 @@ class TestRepr:
 # # def test_execute_take():
 # #     universe = pd.DataFrame({"Asset0": np.arange(100, 200)})
 
-# #     trade = ep.trade("Asset0", lot=1.0, take=1.9, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=1.0, take=1.9, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 3
 # #     assert np.array_equal(trade.final_pnl(universe), [103 - 101])
 
-# #     trade = ep.trade("Asset0", lot=2.0, take=3.8, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=2.0, take=3.8, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 3
 # #     assert np.array_equal(trade.final_pnl(universe), [2 * (103 - 101)])
 
-# #     trade = ep.trade("Asset0", lot=1.0, take=1000, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=1.0, take=1000, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 5
 # #     assert np.array_equal(trade.final_pnl(universe), [105 - 101])
@@ -434,17 +440,17 @@ class TestRepr:
 # # def test_execute_stop():
 # #     universe = prices=pd.DataFrame({"Asset0": np.arange(100, 0, -1)})
 
-# #     trade = ep.trade("Asset0", lot=1.0, stop=-1.9, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=1.0, stop=-1.9, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 3
 # #     assert np.array_equal(trade.final_pnl(universe), [97 - 99])
 
-# #     trade = ep.trade("Asset0", lot=2.0, stop=-3.8, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=2.0, stop=-3.8, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 3
 # #     assert np.array_equal(trade.final_pnl(universe), [2 * (97 - 99)])
 
-# #     trade = ep.trade("Asset0", lot=1.0, stop=-1000, open_bar=1, shut_bar=5)
+# #     trade = ep.trade("Asset0", lot=1.0, stop=-1000, entry=1, exit=5)
 # #     trade.execute(universe)
 # #     assert trade.close_bar == 5
 # #     assert np.array_equal(trade.final_pnl(universe), [95 - 99])

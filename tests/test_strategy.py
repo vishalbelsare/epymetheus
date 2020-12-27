@@ -95,8 +95,8 @@ class TestStrategy:
     def test_history(self):
         universe = pd.DataFrame({"A": range(10), "B": range(10), "C": range(10)})
         trades = [
-            trade("A", open_bar=1, shut_bar=2, take=3, stop=-4),
-            [2, -3] * trade(["B", "C"], open_bar=3, shut_bar=9, take=5, stop=-2),
+            trade("A", entry=1, exit=2, take=3, stop=-4),
+            [2, -3] * trade(["B", "C"], entry=3, exit=9, take=5, stop=-2),
         ]
         strategy = DeterminedStrategy(trades).run(universe)
         history = strategy.history
@@ -106,9 +106,9 @@ class TestStrategy:
                 "trade_id": [0, 1, 1],
                 "asset": ["A", "B", "C"],
                 "lot": [1, 2, -3],
-                "open_bar": [1, 3, 3],
-                "close_bar": [2, 5, 5],
-                "shut_bar": [2, 9, 9],
+                "entry": [1, 3, 3],
+                "close": [2, 5, 5],
+                "exit": [2, 9, 9],
                 "take": [3, 5, 5],
                 "stop": [-4, -2, -2],
                 "pnl": [1, 4, -6],
@@ -123,7 +123,7 @@ class TestStrategy:
             strategy.history
 
     def test_wealth(self):
-        # TODO test for when shut_bar != close_bar
+        # TODO test for when exit != close
 
         universe = pd.DataFrame({"A": range(10), "B": range(10), "C": range(10)})
 
@@ -132,8 +132,8 @@ class TestStrategy:
         # ---
 
         trades = [
-            trade("A", open_bar=1, shut_bar=3),
-            trade("B", open_bar=2, shut_bar=4),
+            trade("A", entry=1, exit=3),
+            trade("B", entry=2, exit=4),
         ]
         strategy = DeterminedStrategy(trades).run(universe)
         wealth = strategy.wealth()
@@ -275,8 +275,8 @@ class TestStrategy:
 #     for attr in (
 #         'asset',
 #         'lot',
-#         'open_bars',
-#         'shut_bars',
+#         'entrys',
+#         'exits',
 #         'durations',
 #         'open_prices',
 #         'close_prices',
@@ -306,8 +306,8 @@ class TestStrategy:
 #         Trade(
 #             asset=trade.asset,
 #             lot=a * trade.lot,
-#             open_bar=trade.open_bar,
-#             shut_bar=trade.shut_bar
+#             entry=trade.entry,
+#             exit=trade.exit
 #         )
 #         for trade in trades_1
 #     ]
@@ -320,8 +320,8 @@ class TestStrategy:
 
 #     for attr in (
 #         'asset',
-#         'open_bars',
-#         'shut_bars',
+#         'entrys',
+#         'exits',
 #         'durations',
 #         'open_prices',
 #         'close_prices',

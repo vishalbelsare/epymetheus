@@ -20,7 +20,7 @@ class BuyAndHold(Strategy):
     >>> strategy = BuyAndHold({"0": 0.3, "1": 0.7})
     >>> universe = make_randomwalk(5, 3)
     >>> strategy(universe)
-    [trade(['0' '1'], lot=[0.3 0.7], open_bar=0)]
+    [trade(['0' '1'], lot=[0.3 0.7], entry=0)]
     """
 
     def __init__(self, weight):
@@ -30,4 +30,4 @@ class BuyAndHold(Strategy):
         asset = list(self.weight.keys())
         price = universe.loc[:, asset].iloc[0].values
         lot = list(np.array(list(self.weight.values())) / price)
-        yield lot * trade(asset, open_bar=universe.index[0])
+        yield lot * trade(asset, entry=universe.index[0])
