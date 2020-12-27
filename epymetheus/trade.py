@@ -7,11 +7,13 @@ from epymetheus.universe import Universe
 
 def trade(
     asset,
+    entry=None,
+    exit=None,
+    take=None,
+    stop=None,
     lot=1.0,
     open_bar=None,
     shut_bar=None,
-    take=None,
-    stop=None,
 ):
     """
     Initialize `Trade`.
@@ -20,16 +22,16 @@ def trade(
     ----------
     - asset : str or array of str
         Name of assets.
-    - open_bar : object or None, default None
-        Bar to open the trade.
-    - shut_bar : object or None, default None
-        Bar to enforce the trade to close.
-    - lot : float, default 1.0
-        Lot to trade in unit of share.
+    - entry : object or None, default None
+        Datetime of entry.
+    - exit : object or None, default None
+        Datetime of exit.
     - take : float > 0 or None, default None
         Threshold of profit-take.
     - stop : float < 0 or None, default None
         Threshold of stop-loss.
+    - lot : float, default 1.0
+        Lot to trade in unit of share.
 
     Returns
     -------
@@ -47,22 +49,24 @@ def trade(
     trade(['AAPL' 'AMZN'], lot=[ 1. -2.])
 
     >>> from datetime import date
-    >>> trade("AAPL", open_bar=date(2020, 1, 1))
-    trade(['AAPL'], lot=[1.], open_bar=2020-01-01)
+    >>> trade("AAPL", date(2020, 1, 1))
+    trade(['AAPL'], lot=[1.], entry=2020-01-01)
 
-    >>> trade("AAPL", open_bar=date(2020, 1, 1), shut_bar=date(2020, 1, 31))
-    trade(['AAPL'], lot=[1.], open_bar=2020-01-01, shut_bar=2020-01-31)
+    >>> trade("AAPL", date(2020, 1, 1), date(2020, 1, 31))
+    trade(['AAPL'], lot=[1.], entry=2020-01-01, exit=2020-01-31)
 
     >>> trade("AAPL", take=200.0, stop=-100.0)
     trade(['AAPL'], lot=[1.], take=200.0, stop=-100.0)
     """
+    if open_bar is not None:
+        raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
+        entry = open_bar if entry is None else entry
+    if shut_bar is not None:
+        raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
+        exit = shut_bar if exit is None else exit
+
     return Trade._trade(
-        asset=asset,
-        lot=lot,
-        open_bar=open_bar,
-        shut_bar=shut_bar,
-        take=take,
-        stop=stop,
+        asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot
     )
 
 
@@ -74,50 +78,42 @@ class Trade:
     ----------
     - asset : str or array of str
         Name of assets.
-    - open_bar : object or None, default None
-        Bar to open the trade.
-    - shut_bar : object or None, default None
-        Bar to enforce the trade to close.
-    - lot : float, default 1.0
-        Lot to trade in unit of share.
+    - entry : object or None, default None
+        Datetime of entry.
+    - exit : object or None, default None
+        Datetime of exit.
     - take : float > 0 or None, default None
         Threshold of profit-take.
     - stop : float < 0 or None, default None
         Threshold of stop-loss.
+    - lot : float, default 1.0
+        Lot to trade in unit of share.
 
     Attributes
     ----------
-    - close_bar : object
-        Bar to close the trade.
+    - close: object
+        Datetime to close the trade.
         It is set by the method `self.execute`.
     """
 
     def __init__(
         self,
         asset,
-        lot=1.0,
-        open_bar=None,
-        shut_bar=None,
+        entry=None,
+        exit=None,
         take=None,
         stop=None,
+        lot=1.0,
     ):
         self.asset = asset
-        self.lot = lot
-        self.open_bar = open_bar
-        self.shut_bar = shut_bar
+        self.entry = entry
+        self.exit = exit
         self.take = take
         self.stop = stop
+        self.lot = lot
 
     @classmethod
-    def _trade(
-        cls,
-        asset,
-        lot=1.0,
-        open_bar=None,
-        shut_bar=None,
-        take=None,
-        stop=None,
-    ):
+    def _trade(cls, asset, entry, exit, take, stop, lot):
         """
         Initialize `Trade`.
 
@@ -128,14 +124,7 @@ class Trade:
         asset = np.asarray(asset).reshape(-1)
         lot = np.broadcast_to(np.asarray(lot), asset.shape)
 
-        return cls(
-            asset=asset,
-            lot=lot,
-            open_bar=open_bar,
-            shut_bar=shut_bar,
-            take=take,
-            stop=stop,
-        )
+        return cls(asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot)
 
     @property
     def array_asset(self):
@@ -201,7 +190,7 @@ class Trade:
 
     def execute(self, universe):
         """
-        Execute trade and set `self.close_bar`.
+        Execute trade and set `self.close`.
 
         Parameters
         ----------
@@ -216,45 +205,45 @@ class Trade:
         >>> import pandas as pd
         >>> import epymetheus as ep
         >>> universe = pd.DataFrame({
-        ...     "A0": [1, 2, 3, 4, 5, 6, 7],
-        ...     "A1": [2, 3, 4, 5, 6, 7, 8],
-        ...     "A2": [3, 4, 5, 6, 7, 8, 9],
+        ...     "A0": [1., 2., 3., 4., 5., 6., 7.],
+        ...     "A1": [2., 3., 4., 5., 6., 7., 8.],
+        ...     "A2": [3., 4., 5., 6., 7., 8., 9.],
         ... }, dtype=float)
 
-        >>> t = ep.trade("A0", open_bar=1, shut_bar=6)
+        >>> t = ep.trade("A0", entry=1, exit=6)
         >>> t = t.execute(universe)
-        >>> t.close_bar
+        >>> t.close
         6
 
-        >>> t = ep.trade("A0", open_bar=1, shut_bar=6, take=2)
+        >>> t = ep.trade("A0", entry=1, exit=6, take=2)
         >>> t = t.execute(universe)
-        >>> t.close_bar
+        >>> t.close
         3
 
-        >>> t = -ep.trade(asset="A0", open_bar=1, shut_bar=6, stop=-2)
+        >>> t = -ep.trade(asset="A0", entry=1, exit=6, stop=-2)
         >>> t = t.execute(universe)
-        >>> t.close_bar
+        >>> t.close
         3
         """
         universe = self.__to_dataframe(universe)
 
         # If already executed
-        if hasattr(self, "close_bar"):
+        if hasattr(self, "close"):
             return self
 
-        # Compute close_bar
-        open_bar = universe.index[0] if self.open_bar is None else self.open_bar
-        shut_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
+        # Compute close
+        entry = universe.index[0] if self.entry is None else self.entry
+        exit = universe.index[-1] if self.exit is None else self.exit
 
-        close_bar = shut_bar
+        close = exit
 
         if (self.take is not None) or (self.stop is not None):
-            i_open = universe.index.get_indexer([open_bar]).item()
-            i_shut = universe.index.get_indexer([shut_bar]).item()
+            i_entry = universe.index.get_indexer([entry]).item()
+            i_exit = universe.index.get_indexer([exit]).item()
 
             value = self.array_value(universe).sum(axis=1)
-            pnl = value - value[i_open]
-            pnl[:i_open] = 0
+            pnl = value - value[i_entry]
+            pnl[:i_entry] = 0
 
             signal = np.logical_or(
                 pnl >= (self.take or np.inf),
@@ -262,10 +251,10 @@ class Trade:
             )
             i_signal = np.searchsorted(signal, True)
 
-            i_close = min(i_shut, i_signal)
-            close_bar = universe.index[i_close]
+            i_close = min(i_exit, i_signal)
+            close = universe.index[i_close]
 
-        self.close_bar = close_bar
+        self.close = close
 
         return self
 
@@ -288,7 +277,7 @@ class Trade:
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
         ... })
-        >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+        >>> trade = [2, -3] * ep.trade(["A0", "A2"], entry=1, exit=3)
         >>> trade.array_value(universe)
         array([[  2.,  -9.],
                [  4., -12.],
@@ -299,86 +288,6 @@ class Trade:
         universe = self.__to_dataframe(universe)
         array_value = self.lot * universe.loc[:, self.asset].values
         return array_value
-
-    # def array_exposure(self, universe):
-    #     """
-    #     Return exposure of self for each order.
-
-    #     Returns
-    #     -------
-    #     array_exposure : numpy.array, shape (n_bars, n_orders)
-
-    #     Examples
-    #     --------
-    #     >>> import pandas as pd
-    #     >>> import epymetheus as ep
-    #     ...
-    #     >>> universe = pd.DataFrame({
-    #     ...     "A0": [1, 2, 3, 4, 5],
-    #     ...     "A1": [2, 3, 4, 5, 6],
-    #     ...     "A2": [3, 4, 5, 6, 7],
-    #     ... }, dtype=float)
-    #     >>> trade = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
-    #     >>> trade.array_exposure(universe)
-    #     array([[  0.,   0.],
-    #            [  4., -12.],
-    #            [  6., -15.],
-    #            [  8., -18.],
-    #            [  0.,   0.]])
-    #     """
-    #     universe = self.__to_dataframe(universe)
-
-    #     i_open= universe.index.get_indexer([self.open_bar]).item()
-    #     i_close= universe.index.get_indexer([self.close_bar]).item()
-
-    #     value = self.array_value(universe)
-    #     value[:open_bar_index] = 0
-    #     value[stop_bar_index + 1 :] = 0
-
-    #     array_exposure = array_exposure.reshape(-1, self.asset.size)
-
-    #     return array_exposure
-
-    # def series_exposure(self, universe, net=True):
-    #     """
-    #     Return time-series of value of the position.
-
-    #     Parameters
-    #     ----------
-    #     - universe : pandas.DataFram e
-    #     - net : bool, default True
-    #         If True, return net exposure.
-    #         If False, return absolute exposure.
-
-    #     Returns
-    #     -------
-    #     series_exposure : numpy.array, shape (n_bars, )
-
-    #     Examples
-    #     --------
-    #     >>> import pandas as pd
-    #     >>> import epymetheus as ep
-    #     ...
-    #     >>> universe = pd.DataFrame({
-    #     ...     "A0": [1, 2, 3, 4, 5],
-    #     ...     "A1": [2, 3, 4, 5, 6],
-    #     ...     "A2": [3, 4, 5, 6, 7],
-    #     ... })
-    #     >>> t = [2, -3] * ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
-    #     >>> t.series_exposure(universe, net=True)
-    #     array([  0.,  -8.,  -9., -10.,   0.])
-    #     >>> t.series_exposure(universe, net=False)
-    #     array([ 0., 16., 21., 26.,  0.])
-    #     """
-    #     universe = self.__to_dataframe(universe)
-
-    #     array_exposure = self.array_exposure(universe)
-    #     if net:
-    #         series_exposure = array_exposure.sum(axis=1)
-    #     else:
-    #         series_exposure = np.abs(array_exposure).sum(axis=1)
-
-    #     return series_exposure
 
     def array_pnl(self, universe):
         """
@@ -396,7 +305,7 @@ class Trade:
         ...     "A0": [1, 2, 3, 4, 5],
         ...     "A1": [3, 4, 5, 6, 7],
         ... })
-        >>> trade = [2, -3] * ep.trade(["A0", "A1"], open_bar=1, shut_bar=3)
+        >>> trade = [2, -3] * ep.trade(["A0", "A1"], entry=1, exit=3)
         >>> trade.array_pnl(universe)
         array([[ 0.,  0.],
                [ 0.,  0.],
@@ -408,14 +317,14 @@ class Trade:
 
         array_value = self.array_value(universe)
 
-        stop_bar = universe.index[-1] if self.shut_bar is None else self.shut_bar
+        stop_bar = universe.index[-1] if self.exit is None else self.exit
 
-        open_bar_index = universe.index.get_indexer([self.open_bar]).item()
+        i_entry = universe.index.get_indexer([self.entry]).item()
         stop_bar_index = universe.index.get_indexer([stop_bar]).item()
 
         array_pnl = array_value
-        array_pnl -= array_pnl[open_bar_index]
-        array_pnl[:open_bar_index] = 0
+        array_pnl -= array_pnl[i_entry]
+        array_pnl[:i_entry] = 0
         array_pnl[stop_bar_index:] = array_pnl[stop_bar_index]
 
         array_pnl = array_pnl.reshape(-1, self.asset.size)
@@ -440,7 +349,7 @@ class Trade:
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
         ... })
-        >>> t = ep.trade("A0", lot=1, open_bar=1, shut_bar=3)
+        >>> t = ep.trade("A0", lot=1, entry=1, exit=3)
         >>> t = t.execute(universe)
         >>> t.series_pnl(universe)
         array([0, 0, 1, 2, 2])
@@ -472,19 +381,19 @@ class Trade:
         ...     "A1": [2, 3, 4, 5, 6],
         ...     "A2": [3, 4, 5, 6, 7],
         ... }, dtype=float)
-        >>> t = ep.trade(["A0", "A2"], open_bar=1, shut_bar=3)
+        >>> t = ep.trade(["A0", "A2"], entry=1, exit=3)
         >>> t = t.execute(universe)
         >>> t.final_pnl(universe)
         array([2., 2.])
         """
         universe = self.__to_dataframe(universe)
 
-        i_open = universe.index.get_indexer([self.open_bar]).item()
-        i_close = universe.index.get_indexer([self.close_bar]).item()
+        i_entry = universe.index.get_indexer([self.entry]).item()
+        i_close = universe.index.get_indexer([self.close]).item()
 
         value = self.array_value(universe)
-        pnl = value - value[i_open]
-        pnl[:i_open] = 0
+        pnl = value - value[i_entry]
+        pnl[:i_entry] = 0
         pnl[i_close:] = pnl[i_close]
 
         final_pnl = pnl[-1]
@@ -492,14 +401,7 @@ class Trade:
         return final_pnl
 
     def __eq__(self, other):
-        attrs = (
-            "asset",
-            "lot",
-            "open_bar",
-            "shut_bar",
-            "take",
-            "stop",
-        )
+        attrs = ("asset", "entry", "exit", "take", "stop", "lot")
         return all(
             getattr(self, attr, None) == getattr(other, attr, None) for attr in attrs
         )
@@ -556,9 +458,9 @@ class Trade:
 
     def __repr__(self):
         """
-        >>> t = trade("AMZN", open_bar=1)
+        >>> t = trade("AMZN", entry=1)
         >>> t
-        trade(['AMZN'], lot=[1.], open_bar=1)
+        trade(['AMZN'], lot=[1.], entry=1)
 
         >>> t = trade("AMZN", take=100.0)
         >>> t
@@ -566,7 +468,7 @@ class Trade:
         """
         params = [f"{self.asset}", f"lot={self.lot}"]
 
-        for attr in ("open_bar", "shut_bar", "take", "stop"):
+        for attr in ("entry", "exit", "take", "stop"):
             value = getattr(self, attr)
             if value is not None:
                 params.append(f"{attr}={value}")

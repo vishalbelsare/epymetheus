@@ -36,8 +36,8 @@ class TestAbsExposure:
             }
         )
         trades = [
-            2 * trade("A", open_bar=1, shut_bar=5).execute(universe),
-            -3 * trade("B", open_bar=2, shut_bar=4).execute(universe),
+            2 * trade("A", entry=1, exit=5).execute(universe),
+            -3 * trade("B", entry=2, exit=4).execute(universe),
         ]
         result = ts.abs_exposure(trades, universe)
         expected = np.array([0.0, 2.0, 11.0, 26.0, 13.0, 18.0, 0.0])
@@ -131,8 +131,8 @@ class TestNetExposure:
             }
         )
         trades = [
-            2 * trade("A", open_bar=1, shut_bar=5).execute(universe),
-            -3 * trade("B", open_bar=2, shut_bar=4).execute(universe),
+            2 * trade("A", entry=1, exit=5).execute(universe),
+            -3 * trade("B", entry=2, exit=4).execute(universe),
         ]
         result = ts.net_exposure(trades, universe)
         expected = np.array([0.0, 2.0, 5.0, -22.0, 7.0, 18.0, 0.0])

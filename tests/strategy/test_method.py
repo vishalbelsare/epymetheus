@@ -1,6 +1,5 @@
-import pytest
-
 import pandas as pd
+import pytest
 
 import epymetheus as ep
 from epymetheus import Strategy
@@ -14,22 +13,8 @@ class HardCodedStrategy(Strategy):
     Yield hard-coded trades.
     """
 
-    trade0 = ep.trade(
-        asset="A0",
-        lot=1.0,
-        open_bar="B0",
-        shut_bar="B1",
-        take=2.0,
-        stop=-2.0,
-    )
-    trade1 = ep.trade(
-        asset="A1",
-        lot=1.1,
-        open_bar="B2",
-        shut_bar="B3",
-        take=2.1,
-        stop=-2.1,
-    )
+    trade0 = ep.trade(asset="A0", lot=1.0, entry="B0", exit="B1", take=2.0, stop=-2.0)
+    trade1 = ep.trade(asset="A1", lot=1.1, entry="B2", exit="B3", take=2.1, stop=-2.1)
 
     def logic(self, universe):
         yield self.trade0
@@ -66,7 +51,7 @@ class TestRun:
         assert strategy.trades == expected
 
     @pytest.mark.parametrize("verbose", params_verbose)
-    def test_close_bar(self, verbose):
+    def test_close(self, verbose):
         """
         Notes
         -----
@@ -74,10 +59,10 @@ class TestRun:
         """
         strategy = HardCodedStrategy().run(self.universe, verbose=verbose)
         expected = [
-            t.execute(self.universe).close_bar
+            t.execute(self.universe).close
             for t in (strategy.trade0, strategy.trade1)
         ]
-        result = [trade.close_bar for trade in strategy.trades]
+        result = [trade.close for trade in strategy.trades]
         assert result == expected
 
     # @pytest.mark.parametrize("verbose", params_verbose)

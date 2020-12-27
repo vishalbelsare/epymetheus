@@ -15,14 +15,14 @@ def yield_trades(n_orders):
     if n_orders == 1:
         for lot in params_lot:
             yield ep.trade(
-                asset="A0", open_bar="B0", shut_bar="B1", lot=lot, take=1.0, stop=-1.0,
+                asset="A0", entry="B0", exit="B1", lot=lot, take=1.0, stop=-1.0,
             )
     else:
         for i, _ in enumerate(params_lot):
             asset = [f"A{i}" for i in range(n_orders)]
             lot = list(islice(cycle(params_lot), i, i + n_orders))
             yield ep.trade(
-                asset=asset, open_bar="B0", shut_bar="B1", lot=lot, take=1.0, stop=-1.0,
+                asset=asset, entry="B0", exit="B1", lot=lot, take=1.0, stop=-1.0,
             )
 
 
@@ -40,8 +40,8 @@ def assert_trade_operation(trade0, trade1, operator):
     >>> assert_trade_operation(trade0, trade1, operator)  # No Error
     """
     assert_array_equal(trade0.asset, trade1.asset)
-    assert trade0.open_bar == trade1.open_bar
-    assert trade0.shut_bar == trade1.shut_bar
+    assert trade0.entry == trade1.entry
+    assert trade0.exit == trade1.exit
     assert np.allclose([operator(x) for x in trade0.array_lot], trade1.array_lot)
     assert trade0.take == trade1.take
     assert trade0.stop == trade1.stop

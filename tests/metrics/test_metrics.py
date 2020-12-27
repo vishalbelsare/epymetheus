@@ -33,7 +33,7 @@ class TestNumWin:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
         result = num_win(trades, universe)
         expected = (lots > 0).sum()
@@ -46,7 +46,7 @@ class TestNumLose:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
         metric = num_lose(trades, universe)
         expected = (lots <= 0).sum()
@@ -59,7 +59,7 @@ class TestRateWin:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
         metric = rate_win(trades, universe)
         expected = (lots > 0).sum() / len(trades)
@@ -72,7 +72,7 @@ class TestRateLose:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
         metric = rate_lose(trades, universe)
         expected = (lots <= 0).sum() / len(trades)
@@ -85,7 +85,7 @@ class TestAvgWin:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
 
         tot_win = avg_win(trades, universe) * num_win(trades, universe)
@@ -100,7 +100,7 @@ class TestAvgLose:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
 
         tot_win = avg_lose(trades, universe) * num_lose(trades, universe)
@@ -115,7 +115,7 @@ class TestAvgPnl:
         np.random.seed(42)
         universe = pd.DataFrame({"A": range(100)})
         lots = np.random.randn(100)
-        trades = [lot * trade("A", open_bar=0) for lot in lots]
+        trades = [lot * trade("A", entry=0) for lot in lots]
         trades = [t.execute(universe) for t in trades]
 
         tot_pnl = avg_pnl(trades, universe) * len(trades)
@@ -516,8 +516,8 @@ class TestName:
 #     @pytest.mark.parametrize("net", [True, False])
 #     def test_hand(self, net):
 #         universe = self.universe_hand
-#         trade0 = ep.trade("A0", lot=2.0, open_bar=1, shut_bar=5)
-#         trade1 = ep.trade("A1", lot=-3.0, open_bar=2, shut_bar=4)
+#         trade0 = ep.trade("A0", lot=2.0, entry=1, exit=5)
+#         trade1 = ep.trade("A1", lot=-3.0, entry=2, exit=4)
 #         strategy = DeterminedStrategy([trade0, trade1]).run(universe)
 #         result = Exposure(net=net).result(strategy)
 #         if net:

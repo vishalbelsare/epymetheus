@@ -14,5 +14,5 @@ class TestBuyAndHold:
         assert len(strategy.trades) == 1
         assert (strategy.trades[0].asset == ["A", "B"]).all()
         assert (strategy.trades[0].lot == [0.5 / 1, 0.5 / 2]).all()
-        assert strategy.trades[0].open_bar == 0
-        assert strategy.trades[0].close_bar == 2
+        assert strategy.trades[0].entry == 0
+        assert strategy.trades[0].close == 2
