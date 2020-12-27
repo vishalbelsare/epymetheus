@@ -161,7 +161,9 @@ class Strategy(abc.ABC):
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
-        return pd.Series(ts.wealth(self.trades, self.universe), index=self.universe.index)
+        return pd.Series(
+            ts.wealth(self.trades, self.universe), index=self.universe.index
+        )
 
     def drawdown(self) -> pd.Series:
         """

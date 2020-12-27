@@ -9,7 +9,7 @@ def _pnls(trades, universe):
 
 def final_wealth(trades, universe):
     # maybe faster than wealth[-1]
-    return sum(t.final_pnl(universe) for t in trades)
+    return np.sum([t.final_pnl(universe) for t in trades])
 
 
 def num_win(trades, universe):

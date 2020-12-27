@@ -19,32 +19,8 @@ if __name__ == "__main__":
 
     import pandas as ep
     import epymetheus as ep
-
-    def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
-        # I get $100 allowance on the first business day of each month
-        allowance = 100
-
-        trades = []
-        for date in pd.date_range(universe.index[0], universe.index[-1], freq="BMS"):
-            cheapest_stock = universe.loc[date].idxmin()
-
-            # Find the maximum number of shares that I can buy with my allowance
-            n_shares = allowance // universe.at[date, cheapest_stock]
-
-            trade = n_shares * ep.trade(
-                cheapest_stock,
-                open_bar=date,
-                take=profit_take,
-                stop=stop_loss,
-            )
-            trades.append(trade)
-
-        return trades
-
-    # ---
-
+    from epymetheus.benchmarks import dumb_strategy
     from epymetheus.datasets import fetch_usstocks
-    from epymetheus.metrics import FinalWealth
 
     universe = fetch_usstocks()
 
@@ -58,9 +34,10 @@ if __name__ == "__main__":
         )
         my_strategy.run(universe, verbose=False)
 
-        return my_strategy.score(FinalWealth())
+        return my_strategy.score("final_wealth")
 
-    study = optuna.create_study(direction="maximize")
+    # study = optuna.create_study(direction="maximize")
+    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.RandomSampler(seed=42))
     study.optimize(objective, n_trials=100)
 
     print(">>> study.best_params")
