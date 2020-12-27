@@ -126,68 +126,6 @@ class Trade:
 
         return cls(asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot)
 
-    @property
-    def array_asset(self):
-        """
-        Return asset as `numpy.array`.
-
-        Returns
-        -------
-        array_asset : numpy.array, shape (n_orders, )
-
-        Examples
-        --------
-        >>> trade = Trade(asset='AAPL')
-        >>> trade.array_asset
-        array(['AAPL'], dtype='<U4')
-
-        >>> trade = Trade(asset=['AAPL', 'MSFT'])
-        >>> trade.array_asset
-        array(['AAPL', 'MSFT'], dtype='<U4')
-        """
-        return np.asarray(self.asset).reshape(-1)
-
-    @property
-    def array_lot(self):
-        """
-        Return lot as `numpy.array`.
-
-        Returns
-        -------
-        array_lot : numpy.array, shape (n_orders, )
-
-        Examples
-        --------
-        >>> trade = Trade(asset='AAPL', lot=0.2)
-        >>> trade.array_lot
-        array([0.2])
-        >>> trade = Trade(asset=['AAPL', 'MSFT'], lot=[0.2, 0.4])
-        >>> trade.array_lot
-        array([0.2, 0.4])
-        """
-        return np.asarray(self.lot).reshape(-1)
-
-    @property
-    def n_orders(self):
-        """
-        Return number of assets in self.
-
-        Returns
-        -------
-        n_orders : int
-            Number of orders.
-
-        Examples
-        --------
-        >>> trade = Trade(asset='AAPL')
-        >>> trade.n_orders
-        1
-        >>> trade = Trade(asset=['AAPL', 'MSFT'])
-        >>> trade.n_orders
-        2
-        """
-        return self.array_asset.size
-
     def execute(self, universe):
         """
         Execute trade and set `self.close`.
@@ -289,87 +227,13 @@ class Trade:
         array_value = self.lot * universe.loc[:, self.asset].values
         return array_value
 
-    def array_pnl(self, universe):
-        """
-        Return profit-loss of self for each order.
-
-        Returns
-        -------
-        array_pnl : numpy.array, shape (n_bars, n_orders)
-
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> import epymetheus as ep
-        >>> universe = pd.DataFrame({
-        ...     "A0": [1, 2, 3, 4, 5],
-        ...     "A1": [3, 4, 5, 6, 7],
-        ... })
-        >>> trade = [2, -3] * ep.trade(["A0", "A1"], entry=1, exit=3)
-        >>> trade.array_pnl(universe)
-        array([[ 0.,  0.],
-               [ 0.,  0.],
-               [ 2., -3.],
-               [ 4., -6.],
-               [ 4., -6.]])
-        """
-        universe = self.__to_dataframe(universe)
-
-        array_value = self.array_value(universe)
-
-        stop_bar = universe.index[-1] if self.exit is None else self.exit
-
-        i_entry = universe.index.get_indexer([self.entry]).item()
-        stop_bar_index = universe.index.get_indexer([stop_bar]).item()
-
-        array_pnl = array_value
-        array_pnl -= array_pnl[i_entry]
-        array_pnl[:i_entry] = 0
-        array_pnl[stop_bar_index:] = array_pnl[stop_bar_index]
-
-        array_pnl = array_pnl.reshape(-1, self.asset.size)
-
-        return array_pnl
-
-    def series_pnl(self, universe):
-        """
-        Return profit-loss of self.
-
-        Returns
-        -------
-        net_exposure : numpy.array, shape (n_bars, )
-
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> import epymetheus as ep
-        ...
-        >>> universe = pd.DataFrame({
-        ...     "A0": [1, 2, 3, 4, 5],
-        ...     "A1": [2, 3, 4, 5, 6],
-        ...     "A2": [3, 4, 5, 6, 7],
-        ... })
-        >>> t = ep.trade("A0", lot=1, entry=1, exit=3)
-        >>> t = t.execute(universe)
-        >>> t.series_pnl(universe)
-        array([0, 0, 1, 2, 2])
-        """
-        universe = self.__to_dataframe(universe)
-
-        return self.array_pnl(universe).sum(axis=1)
-
     def final_pnl(self, universe):
         """
         Return final profit-loss of self.
 
         Returns
         -------
-        pnl : numpy.array, shapr (n_orders, )
-
-        Raises
-        ------
-        ValueError
-            If self has not been `run`.
+        pnl : numpy.array, shape (n_orders, )
 
         Examples
         --------

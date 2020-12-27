@@ -89,7 +89,7 @@ class TestStrategy:
         """
         np.random.seed(42)
         universe = make_randomwalk()
-        strategy = RandomStrategy()
+        strategy = RandomStrategy(max_n_assets=5)
 
         strategy.run(universe)
 

@@ -1,5 +1,5 @@
 import abc
-from inspect import cleandoc
+from functools import partial
 from time import time
 
 import numpy as np
@@ -11,13 +11,13 @@ from ..exceptions import NotRunError
 from ..metrics import metric_from_name
 
 
-def create_strategy(logic_func, **params):
+def create_strategy(f, **params):
     """
     Initialize `Strategy` from function.
 
     Parameters
     ----------
-    - logic_func : callable
+    - f : callable
         Function that returns iterable from universe and parameters.
     - **params
         Parameter values.
@@ -25,57 +25,68 @@ def create_strategy(logic_func, **params):
     Examples
     --------
     >>> from epymetheus import trade
-    ...
+
     >>> def logic_func(universe, my_param):
     ...     return [my_param * trade("AAPL")]
-    ...
+
     >>> strategy = create_strategy(logic_func, my_param=2.0)
     >>> universe = None
     >>> strategy(universe)
     [trade(['AAPL'], lot=[2.])]
     """
-    return Strategy._create_strategy(logic_func=logic_func, params=params)
+    return Strategy._create_strategy(f, **params)
 
 
 class Strategy(abc.ABC):
     """
     Base class of trading strategy.
+
+    Examples
+    --------
+    Initialize from function
+
+    >>> from epymetheus import trade
+
+    >>> f = lambda universe, param: [param * trade("A")]
+    >>> strategy = create_strategy(f, param=2.0)
+    >>> universe = ...
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
+
+    Initialize by subclassing
+
+    >>> class MyStrategy(Strategy):
+    ...
+    ...     def __init__(self, param):
+    ...         self.param = param
+    ...
+    ...     def logic(self, universe):
+    ...         return [self.param * trade("A")]
+
+    >>> strategy = MyStrategy(param=2.0)
+    >>> universe = ...
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
     """
 
-    def __init__(self, logic_func=None, params=None):
-        if logic_func is not None:
-            self.logic_func = logic_func
-            self.params = params or {}
-
     @classmethod
-    def _create_strategy(cls, logic_func, params):
-        """
-        Create strategy from a logic function.
-
-        Parameters
-        ----------
-        - logic_func : callable
-            Function that returns iterable from universe and parameters.
-        - params : dict
-            Parameter values.
-
-        Returns
-        -------
-        strategy : Strategy
-        """
-        return cls(logic_func=logic_func, params=params)
+    def _create_strategy(cls, f, **params):
+        self = cls()
+        self._f = f
+        self._params = params
+        return self
 
     def __call__(self, universe, to_list=True):
-        logic = self.get_logic()
-        trades = logic(universe, **self.get_params())
-        if to_list:
-            trades = list(trades)
+        if hasattr(self, "_f"):
+            setattr(self, "logic", partial(self._f, **self.get_params()))
+        trades = self.logic(universe)
+        trades = list(trades) if to_list else trades
         return trades
 
     def logic(self, universe, **params):
         """
         Logic to generate trades from universe.
-        Used to implement trading strategy by subclassing `Strategy`.
+        Override this to implement trading strategy by subclassing `Strategy`.
 
         Parameters
         ----------
@@ -90,36 +101,76 @@ class Strategy(abc.ABC):
         trades : iterable of trades
         """
 
-    @property
-    def name(self):
+    def run(self, universe, verbose=True):
         """
-        Return name of the strategy.
-        """
-        return self.__class__.__name__
+        Run a backtesting of strategy.
 
-    @property
-    def description(self):
-        """
-        Return detailed description of the strategy.
+        Parameters
+        ----------
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
+        - verbose : bool, default True
+            Verbose mode.
 
         Returns
         -------
-        description : str or None
-            If strategy class has no docstring, return None.
+        self
         """
-        if self.__class__.__doc__ is None:
-            description = None
-        else:
-            description = cleandoc(self.__class__.__doc__)
-        return description
+        _begin_time = time()
 
-    @property
-    def n_trades(self):
-        return len(self.trades)
+        self.universe = universe
 
-    @property
-    def n_orders(self):
-        return sum(t.n_orders for t in self.trades)
+        # Yield trades
+        _begin_time_yield = time()
+        trades = []
+        for i, t in enumerate(self(universe, to_list=False) or []):
+            if verbose:
+                print(f"\r{i + 1} trades returned: {t} ... ", end="")
+            trades.append(t)
+        if len(trades) == 0:
+            raise NoTradeError("No trade.")
+        if verbose:
+            _time = time() - _begin_time_yield
+            print(f"Done. (Runtume: {_time:.4f} sec)")
+
+        # Execute trades
+        _begin_time_execute = time()
+        for i, t in enumerate(trades):
+            if verbose:
+                print(f"\r{i + 1} trades executed: {t} ... ", end="")
+            t.execute(universe)
+        if verbose:
+            _time = time() - _begin_time_execute
+            print(f"Done. (Runtime: {_time:.4f} sec)")
+
+        self.trades = trades
+
+        if verbose:
+            _time = time() - _begin_time
+            final_wealth = self.score("final_wealth")
+            print(f"Done. Final wealth: {final_wealth:.2f} (Runtime: {_time:.4f} sec)")
+
+        return self
+
+    def score(self, metric_name) -> float:
+        """
+        Returns the value of a metric of self.
+
+        Parameters
+        ----------
+        - metric_name : str
+            Metric to evaluate.
+
+        Returns
+        -------
+        metric_value : float
+            Metric.
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def history(self) -> pd.DataFrame:
         """
@@ -135,7 +186,7 @@ class Strategy(abc.ABC):
 
         data = {}
 
-        n_orders = np.array([t.n_orders for t in self.trades])
+        n_orders = np.array([t.asset.size for t in self.trades])
 
         data["trade_id"] = np.repeat(np.arange(len(self.trades)), n_orders)
         data["asset"] = np.concatenate([t.asset for t in self.trades])
@@ -194,59 +245,6 @@ class Strategy(abc.ABC):
 
         return pd.Series(exposure, index=self.universe.index)
 
-    def run(self, universe, verbose=True):
-        """
-        Run a backtesting of strategy.
-
-        Parameters
-        ----------
-        - universe : pandas.DataFrame
-            Historical price data to apply this strategy.
-            The index represents timestamps and the column is the assets.
-        - verbose : bool, default True
-            Verbose mode.
-
-        Returns
-        -------
-        self
-        """
-        _begin_time = time()
-
-        self.universe = universe
-
-        # Yield trades
-        _begin_time_yield = time()
-        trades = []
-        for i, t in enumerate(self(universe, to_list=False) or []):
-            if verbose:
-                print(f"\r{i + 1} trades returned: {t} ... ", end="")
-            trades.append(t)
-        if len(trades) == 0:
-            raise NoTradeError("No trade.")
-        if verbose:
-            _time = time() - _begin_time_yield
-            print(f"Done. (Runtume: {_time:.4f} sec)")
-
-        # Execute trades
-        _begin_time_execute = time()
-        for i, t in enumerate(trades):
-            if verbose:
-                print(f"\r{i + 1} trades executed: {t} ... ", end="")
-            t.execute(universe)
-        if verbose:
-            _time = time() - _begin_time_execute
-            print(f"Done. (Runtime: {_time:.4f} sec)")
-
-        if verbose:
-            _time = time() - _begin_time
-            print(f"Done. (Runtime: {_time:.4f} sec)")
-
-        self.trades = trades
-        return self
-
-    def get_logic(self):
-        return getattr(self, "logic_func", self.logic)
-
     def get_params(self) -> dict:
         """
         Set the parameters of this strategy.
@@ -256,7 +254,7 @@ class Strategy(abc.ABC):
         params : dict[str, *]
             Parameters.
         """
-        return getattr(self, "params", {})
+        return getattr(self, "_params", {})
 
     def set_params(self, **params):
         """
@@ -278,23 +276,9 @@ class Strategy(abc.ABC):
             if key not in valid_keys:
                 raise ValueError(f"Invalid parameter: {key}")
             else:
-                self.params[key] = value
+                self._params[key] = value
 
         return self
-
-    def score(self, metric_name):
-        """
-        Returns the value of a metric of self.
-
-        Parameters
-        ----------
-        - metric : Metric or str
-            Metric to evaluate.
-        """
-        if not hasattr(self, "trades"):
-            raise NotRunError("Strategy has not been run")
-
-        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def evaluate(self, metric):
         raise DeprecationWarning(
