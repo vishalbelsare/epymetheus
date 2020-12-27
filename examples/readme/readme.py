@@ -36,9 +36,10 @@ if __name__ == "__main__":
 
     # ---
 
-    my_strategy.history.head()
-    print(">>> my_strategy.history.head()")
-    print_as_comment(my_strategy.history.head())
+    df_history = my_strategy.history()
+    df_history.head()
+    print(">>> df_history.head()")
+    print_as_comment(df_history.head())
 
     # ---
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     # ---
 
     plt.figure(figsize=(16, 4))
-    plt.hist(my_strategy.history.pnl, bins=100)
+    plt.hist(my_strategy.history().pnl, bins=100)
     plt.axvline(0, ls="--", color="k")
     plt.xlabel("profit and loss")
     plt.ylabel("number of trades")
