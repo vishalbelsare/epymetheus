@@ -4,7 +4,7 @@ from epymetheus.stochastic import generate_geometric_brownian
 
 
 def make_randomwalk(
-    n_bars=1000,
+    n_steps=1000,
     n_assets=10,
     volatility=0.01,
     init_value=1.0,
@@ -21,7 +21,7 @@ def make_randomwalk(
 
     Parameters
     ----------
-    - n_bars : int, default 1000
+    - n_steps : int, default 1000
     - n_assets : int, default 10
     - volatility : float, default 0.01
     - name : str, default='RandomWalk'
@@ -52,13 +52,13 @@ def make_randomwalk(
     9  1.021202  0.958167  0.969598
     """
     data = generate_geometric_brownian(
-        n_steps=n_bars,
+        n_steps=n_steps,
         n_paths=n_assets,
         volatility=volatility,
         init_value=init_value,
         dt=dt,
         drift=drift,
     )
-    index = bars or list(range(n_bars))
+    index = bars or list(range(n_steps))
     columns = assets or [str(i) for i in range(n_assets)]
     return pd.DataFrame(data, index=index, columns=columns)

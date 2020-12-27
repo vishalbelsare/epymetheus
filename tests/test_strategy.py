@@ -208,7 +208,7 @@ class TestStrategy:
 
 
 # params_seed = [42]
-# params_n_bars = [10, 1000]
+# params_n_steps = [10, 1000]
 # params_n_assets = [10, 100]
 # params_n_trades = [10, 100]
 # params_a = [1.23, -1.23]
@@ -265,10 +265,10 @@ class TestStrategy:
 
 
 # @pytest.mark.parametrize('seed', params_seed)
-# @pytest.mark.parametrize('n_bars', params_n_bars)
+# @pytest.mark.parametrize('n_steps', params_n_steps)
 # @pytest.mark.parametrize('n_assets', params_n_assets)
 # @pytest.mark.parametrize('n_trades', params_n_trades)
-# def test_linearity_add(seed, n_bars, n_assets, n_trades):
+# def test_linearity_add(seed, n_steps, n_assets, n_trades):
 #     """
 #     Test additivity of strategies for the following strategies:
 #         - strategy_0 : yield (trade_00, trade_01, ...)
@@ -278,7 +278,7 @@ class TestStrategy:
 #     np.random.seed(seed)
 #     random.seed(seed)
 
-#     universe = make_randomwalk(n_bars, n_assets)
+#     universe = make_randomwalk(n_steps, n_assets)
 
 #     trades_0 = make_random_trades(universe, n_trades, seed + 0)
 #     trades_1 = make_random_trades(universe, n_trades, seed + 1)
@@ -306,11 +306,11 @@ class TestStrategy:
 
 
 # @pytest.mark.parametrize('seed', params_seed)
-# @pytest.mark.parametrize('n_bars', params_n_bars)
+# @pytest.mark.parametrize('n_steps', params_n_steps)
 # @pytest.mark.parametrize('n_assets', params_n_assets)
 # @pytest.mark.parametrize('n_trades', params_n_trades)
 # @pytest.mark.parametrize('a', params_a)
-# def test_linearity_mul(seed, n_bars, n_assets, n_trades, a):
+# def test_linearity_mul(seed, n_steps, n_assets, n_trades, a):
 #     """
 #     Test additivity of strategies for the following strategies:
 #         - strategy_1 : yield (1 * trade_0, 1 * trade_11, ...)
@@ -319,7 +319,7 @@ class TestStrategy:
 #     np.random.seed(seed)
 #     random.seed(seed)
 
-#     universe = make_randomwalk(n_bars, n_assets)
+#     universe = make_randomwalk(n_steps, n_assets)
 
 #     trades_1 = make_random_trades(universe, n_trades, seed + 1)
 #     trades_a = [

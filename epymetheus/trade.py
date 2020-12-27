@@ -169,7 +169,6 @@ class Trade:
         if hasattr(self, "close"):
             return self
 
-        # Compute close
         entry = universe.index[0] if self.entry is None else self.entry
         exit = universe.index[-1] if self.exit is None else self.exit
 
@@ -179,17 +178,19 @@ class Trade:
             i_entry = universe.index.get_indexer([entry]).item()
             i_exit = universe.index.get_indexer([exit]).item()
 
+            # Compute pnl
             value = self.array_value(universe).sum(axis=1)
             pnl = value - value[i_entry]
             pnl[:i_entry] = 0
 
-            signal = np.logical_or(
-                pnl >= (self.take or np.inf),
-                pnl <= (self.stop or -np.inf),
-            )
-            i_signal = np.searchsorted(signal, True)
+            # Place profit-take or loss-cut order
+            take = self.take if self.take is not None else np.inf
+            stop = self.stop if self.stop is not None else -np.inf
+            signal = np.logical_or(pnl >= take, pnl <= stop)
 
-            i_close = min(i_exit, i_signal)
+            # Compute close
+            i_order = np.searchsorted(signal, True)
+            i_close = min(i_exit, i_order)
             close = universe.index[i_close]
 
         self.close = close

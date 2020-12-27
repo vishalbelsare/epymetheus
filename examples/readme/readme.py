@@ -65,10 +65,8 @@ if __name__ == "__main__":
 
     # ---
 
-    from epymetheus import ts
-
-    drawdown = ts.drawdown(my_strategy.trades, universe)
-    net_exposure = ts.net_exposure(my_strategy.trades, universe)
+    drawdown = my_strategy.drawdown()
+    exposure = my_strategy.net_exposure()
 
     plt.figure(figsize=(16, 4))
     plt.plot(pd.Series(drawdown, index=universe.index), linewidth=1)
@@ -78,7 +76,7 @@ if __name__ == "__main__":
     plt.savefig("drawdown.png", bbox_inches="tight", pad_inches=0.1)
 
     plt.figure(figsize=(16, 4))
-    plt.plot(pd.Series(net_exposure, index=universe.index), linewidth=1)
+    plt.plot(pd.Series(exposure, index=universe.index), linewidth=1)
     plt.xlabel("date")
     plt.ylabel("net exposure [USD]")
     plt.title("Net exposure")

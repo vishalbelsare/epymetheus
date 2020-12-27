@@ -156,10 +156,8 @@ my_strategy.score("max_drawdown")
 You may compute various time-series.
 
 ```python
-from epymetheus import ts
-
-drawdown = ts.drawdown(my_strategy.trades, universe)
-net_exposure = ts.net_exposure(my_strategy.trades, universe)
+drawdown = my_strategy.drawdown()
+exposure = my_strategy.net_exposure()
 ```
 
 ![drawdown](examples/readme/drawdown.png)
