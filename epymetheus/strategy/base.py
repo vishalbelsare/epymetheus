@@ -5,10 +5,10 @@ from time import time
 import numpy as np
 import pandas as pd
 
+from .. import ts
 from ..exceptions import NoTradeError
 from ..exceptions import NotRunError
 from ..metrics import metric_from_name
-from ..ts import wealth
 
 
 def create_strategy(logic_func, **params):
@@ -121,7 +121,6 @@ class Strategy(abc.ABC):
     def n_orders(self):
         return sum(t.n_orders for t in self.trades)
 
-    @property
     def history(self) -> pd.DataFrame:
         """
         Return `pandas.DataFrame` of trade history.
@@ -150,7 +149,7 @@ class Strategy(abc.ABC):
 
         return pd.DataFrame(data)
 
-    def wealth(self, universe=None) -> pd.Series:
+    def wealth(self) -> pd.Series:
         """
         Return `pandas.Series` of wealth.
 
@@ -162,9 +161,36 @@ class Strategy(abc.ABC):
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
 
-        universe = universe or self.universe
+        return pd.Series(ts.wealth(self.trades, self.universe), index=self.universe.index)
 
-        return pd.Series(wealth(self.trades, universe), index=universe.index)
+    def drawdown(self) -> pd.Series:
+        """
+        Returns
+        -------
+        drawdown : pandas.Series
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        drawdown = ts.drawdown(self.trades, self.universe)
+
+        return pd.Series(drawdown, index=self.universe.index)
+
+    def net_exposure(self) -> pd.Series:
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        exposure = ts.net_exposure(self.trades, self.universe)
+
+        return pd.Series(exposure, index=self.universe.index)
+
+    def abs_exposure(self) -> pd.Series:
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        exposure = ts.abs_exposure(self.trades, self.universe)
+
+        return pd.Series(exposure, index=self.universe.index)
 
     def run(self, universe, verbose=True):
         """

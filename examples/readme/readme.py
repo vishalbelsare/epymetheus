@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     my_strategy.score("final_wealth")
     my_strategy.score("max_drawdown")
-    my_strategy.score("sharpe_ratio")
+    # my_strategy.score("sharpe_ratio")
     # ts.drawdown(strategy.trades, universe)
     # max_drawdown = my_strategy.score(MaxDrawdown())
     # sharpe_ratio = my_strategy.score(SharpeRatio())
