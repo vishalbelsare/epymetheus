@@ -13,7 +13,7 @@ def make_randomwalk(
     name="RandomWalk",
     bars=None,
     assets=None,
-):
+) -> pd.DataFrame:
     """
     Return `pandas.DataFrame` of random-walking prices (geometric Brownian motion).
     Daily returns follow log-normal distribution.

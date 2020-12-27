@@ -242,6 +242,7 @@ class Strategy(abc.ABC):
             print(f"Done. (Runtime: {_time:.4f} sec)")
 
         self.trades = trades
+
         return self
 
     def get_logic(self):
@@ -282,14 +283,19 @@ class Strategy(abc.ABC):
 
         return self
 
-    def score(self, metric_name):
+    def score(self, metric_name) -> float:
         """
         Returns the value of a metric of self.
 
         Parameters
         ----------
-        - metric : Metric or str
+        - metric_name : str
             Metric to evaluate.
+
+        Returns
+        -------
+        metric_value : float
+            Metric.
         """
         if not hasattr(self, "trades"):
             raise NotRunError("Strategy has not been run")
