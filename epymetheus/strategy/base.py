@@ -1,4 +1,5 @@
 import abc
+from functools import partial
 from time import time
 
 import numpy as np
@@ -10,13 +11,13 @@ from ..exceptions import NotRunError
 from ..metrics import metric_from_name
 
 
-def create_strategy(logic_func, **params):
+def create_strategy(f, **params):
     """
     Initialize `Strategy` from function.
 
     Parameters
     ----------
-    - logic_func : callable
+    - f : callable
         Function that returns iterable from universe and parameters.
     - **params
         Parameter values.
@@ -24,57 +25,66 @@ def create_strategy(logic_func, **params):
     Examples
     --------
     >>> from epymetheus import trade
-    ...
+
     >>> def logic_func(universe, my_param):
     ...     return [my_param * trade("AAPL")]
-    ...
+
     >>> strategy = create_strategy(logic_func, my_param=2.0)
     >>> universe = None
     >>> strategy(universe)
     [trade(['AAPL'], lot=[2.])]
     """
-    return Strategy._create_strategy(logic_func=logic_func, params=params)
+    return Strategy._create_strategy(f, **params)
 
 
 class Strategy(abc.ABC):
     """
     Base class of trading strategy.
+
+    Examples
+    --------
+    Initialize from function
+
+    >>> from epymetheus import trade
+
+    >>> f = lambda universe, param: [param * trade("A")]
+    >>> strategy = create_strategy(f, param=2.0)
+    >>> universe = ...
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
+
+    Initialize by subclassing
+
+    >>> class MyStrategy(Strategy):
+    ...
+    ...     def __init__(self, param):
+    ...         self.param = param
+    ...
+    ...     def logic(self, universe):
+    ...         return [self.param * trade("A")]
+
+    >>> strategy = MyStrategy(param=2.0)
+    >>> universe = ...
+    >>> strategy(universe)
+    [trade(['A'], lot=[2.])]
     """
 
-    def __init__(self, logic_func=None, params=None):
-        if logic_func is not None:
-            self.logic_func = logic_func
-            self.params = params or {}
-
     @classmethod
-    def _create_strategy(cls, logic_func, params):
-        """
-        Create strategy from a logic function.
-
-        Parameters
-        ----------
-        - logic_func : callable
-            Function that returns iterable from universe and parameters.
-        - params : dict
-            Parameter values.
-
-        Returns
-        -------
-        strategy : Strategy
-        """
-        return cls(logic_func=logic_func, params=params)
+    def _create_strategy(cls, f, **params):
+        self = cls()
+        self.params = params
+        setattr(self, "logic", partial(f, **params))
+        return self
 
     def __call__(self, universe, to_list=True):
-        logic = self.get_logic()
-        trades = logic(universe, **self.get_params())
-        if to_list:
-            trades = list(trades)
+        trades = self.logic(universe, **self.get_params())
+        trades = list(trades) if to_list else trades
         return trades
 
     def logic(self, universe, **params):
         """
         Logic to generate trades from universe.
-        Used to implement trading strategy by subclassing `Strategy`.
+        Override this to implement trading strategy by subclassing `Strategy`.
 
         Parameters
         ----------
@@ -232,9 +242,6 @@ class Strategy(abc.ABC):
         exposure = ts.abs_exposure(self.trades, self.universe)
 
         return pd.Series(exposure, index=self.universe.index)
-
-    def get_logic(self):
-        return getattr(self, "logic_func", self.logic)
 
     def get_params(self) -> dict:
         """
