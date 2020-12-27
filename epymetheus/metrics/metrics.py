@@ -1,6 +1,6 @@
 import numpy as np
 
-# from .. import timeseries as ts
+from .. import ts
 
 
 def _pnls(trades, universe):
@@ -45,14 +45,8 @@ def avg_pnl(trades, universe):
     return np.mean(pnls)
 
 
-# TODO
-
-
-# def max_drawdown(trades, universe):
-#     """
-#     Always negative
-#     """
-#     return np.min(ts.drawdown(trades, universe))
+def max_drawdown(trades, universe):
+    return np.min(ts.drawdown(trades, universe))
 
 
 # def avg_return(trades, universe):
