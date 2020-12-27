@@ -72,12 +72,14 @@ class Strategy(abc.ABC):
     @classmethod
     def _create_strategy(cls, f, **params):
         self = cls()
-        self.params = params
-        setattr(self, "logic", partial(f, **params))
+        self._f = f
+        self._params = params
         return self
 
     def __call__(self, universe, to_list=True):
-        trades = self.logic(universe, **self.get_params())
+        if hasattr(self, "_f"):
+            setattr(self, "logic", partial(self._f, **self.get_params()))
+        trades = self.logic(universe)
         trades = list(trades) if to_list else trades
         return trades
 
@@ -252,7 +254,7 @@ class Strategy(abc.ABC):
         params : dict[str, *]
             Parameters.
         """
-        return getattr(self, "params", {})
+        return getattr(self, "_params", {})
 
     def set_params(self, **params):
         """
@@ -274,7 +276,7 @@ class Strategy(abc.ABC):
             if key not in valid_keys:
                 raise ValueError(f"Invalid parameter: {key}")
             else:
-                self.params[key] = value
+                self._params[key] = value
 
         return self
 
