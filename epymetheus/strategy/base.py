@@ -5,10 +5,10 @@ from time import time
 import numpy as np
 import pandas as pd
 
-from epymetheus.exceptions import NoTradeError
-from epymetheus.exceptions import NotRunError
-from epymetheus.metrics import metric_from_name
-from epymetheus.timeseries import wealth
+from ..exceptions import NoTradeError
+from ..exceptions import NotRunError
+from ..metrics import metric_from_name
+from ..ts import wealth
 
 
 def create_strategy(logic_func, **params):
