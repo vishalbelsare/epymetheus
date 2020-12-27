@@ -14,6 +14,8 @@ from epymetheus.metrics import num_lose
 from epymetheus.metrics import num_win
 from epymetheus.metrics import rate_lose
 from epymetheus.metrics import rate_win
+from epymetheus.metrics import max_drawdown
+import epymetheus.ts as ts
 
 
 class TestFinalWealth:
@@ -123,6 +125,16 @@ class TestAvgPnl:
 
         assert np.isclose(tot_pnl, expected)
 
+class TestMaxDrawdown:
+    def test(self):
+        np.random.seed(42)
+        universe = make_randomwalk()
+        strategy = RandomStrategy().run(universe)
+
+        drawdown = ts.drawdown(strategy.trades, universe)
+
+        assert np.min(drawdown) == max_drawdown(strategy.trades, universe)
+
 
 class TestName:
     """
@@ -138,6 +150,7 @@ class TestName:
         assert metric_from_name("num_win") == num_win
         assert metric_from_name("rate_lose") == rate_lose
         assert metric_from_name("rate_win") == rate_win
+        assert metric_from_name("max_drawdown") == max_drawdown
 
     def test_non_existent(self):
         with pytest.raises(KeyError):
