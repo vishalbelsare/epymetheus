@@ -237,11 +237,12 @@ class Strategy(abc.ABC):
             _time = time() - _begin_time_execute
             print(f"Done. (Runtime: {_time:.4f} sec)")
 
+        self.trades = trades
+
         if verbose:
             _time = time() - _begin_time
-            print(f"Done. (Runtime: {_time:.4f} sec)")
-
-        self.trades = trades
+            final_wealth = self.score("final_wealth")
+            print(f"Done. Final wealth: {final_wealth:.2f} (Runtime: {_time:.4f} sec)")
 
         return self
 
