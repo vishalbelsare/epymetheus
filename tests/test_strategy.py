@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from numpy.testing import assert_equal
+
 from epymetheus import Strategy
 from epymetheus import create_strategy
 from epymetheus import trade
@@ -17,6 +19,7 @@ from epymetheus.metrics import num_lose
 from epymetheus.metrics import num_win
 from epymetheus.metrics import rate_lose
 from epymetheus.metrics import rate_win
+from epymetheus import ts
 
 metrics = [
     avg_lose,
@@ -90,7 +93,7 @@ class TestStrategy:
 
         strategy.run(universe)
 
-        assert np.isclose(sum(strategy.history.pnl), strategy.wealth().values[-1])
+        assert np.isclose(sum(strategy.history().pnl), strategy.wealth().values[-1])
 
     def test_history(self):
         universe = pd.DataFrame({"A": range(10), "B": range(10), "C": range(10)})
@@ -99,7 +102,7 @@ class TestStrategy:
             [2, -3] * trade(["B", "C"], entry=3, exit=9, take=5, stop=-2),
         ]
         strategy = DeterminedStrategy(trades).run(universe)
-        history = strategy.history
+        history = strategy.history()
 
         expected = pd.DataFrame(
             {
@@ -120,7 +123,7 @@ class TestStrategy:
         strategy = RandomStrategy()
         with pytest.raises(NotRunError):
             # epymetheus.exceptions.NotRunError: Strategy has not been run
-            strategy.history
+            strategy.history()
 
     def test_wealth(self):
         # TODO test for when exit != close
@@ -145,11 +148,28 @@ class TestStrategy:
 
         pd.testing.assert_series_equal(wealth, expected, check_dtype=False)
 
-    def test_wealth_notrunerror(self):
+    def test_ts(self):
+        universe = make_randomwalk()
+        strategy = RandomStrategy().run(universe)
+        trades = strategy.trades
+
+        assert_equal(strategy.wealth().values, ts.wealth(trades, universe))
+        assert_equal(strategy.drawdown().values, ts.drawdown(trades, universe))
+        assert_equal(strategy.net_exposure().values, ts.net_exposure(trades, universe))
+        assert_equal(strategy.abs_exposure().values, ts.abs_exposure(trades, universe))
+
+    def test_notrunerror(self):
         strategy = RandomStrategy()
         with pytest.raises(NotRunError):
-            # epymetheus.exceptions.NotRunError: Strategy has not been run
             strategy.wealth()
+        with pytest.raises(NotRunError):
+            strategy.history()
+        with pytest.raises(NotRunError):
+            strategy.drawdown()
+        with pytest.raises(NotRunError):
+            strategy.net_exposure()
+        with pytest.raises(NotRunError):
+            strategy.abs_exposure()
 
     @pytest.mark.parametrize("metric", metrics)
     def test_score(self, metric):
