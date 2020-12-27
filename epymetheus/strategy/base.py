@@ -1,5 +1,4 @@
 import abc
-from inspect import cleandoc
 from time import time
 
 import numpy as np
@@ -90,36 +89,76 @@ class Strategy(abc.ABC):
         trades : iterable of trades
         """
 
-    @property
-    def name(self):
+    def run(self, universe, verbose=True):
         """
-        Return name of the strategy.
-        """
-        return self.__class__.__name__
+        Run a backtesting of strategy.
 
-    @property
-    def description(self):
-        """
-        Return detailed description of the strategy.
+        Parameters
+        ----------
+        - universe : pandas.DataFrame
+            Historical price data to apply this strategy.
+            The index represents timestamps and the column is the assets.
+        - verbose : bool, default True
+            Verbose mode.
 
         Returns
         -------
-        description : str or None
-            If strategy class has no docstring, return None.
+        self
         """
-        if self.__class__.__doc__ is None:
-            description = None
-        else:
-            description = cleandoc(self.__class__.__doc__)
-        return description
+        _begin_time = time()
 
-    @property
-    def n_trades(self):
-        return len(self.trades)
+        self.universe = universe
 
-    @property
-    def n_orders(self):
-        return sum(t.n_orders for t in self.trades)
+        # Yield trades
+        _begin_time_yield = time()
+        trades = []
+        for i, t in enumerate(self(universe, to_list=False) or []):
+            if verbose:
+                print(f"\r{i + 1} trades returned: {t} ... ", end="")
+            trades.append(t)
+        if len(trades) == 0:
+            raise NoTradeError("No trade.")
+        if verbose:
+            _time = time() - _begin_time_yield
+            print(f"Done. (Runtume: {_time:.4f} sec)")
+
+        # Execute trades
+        _begin_time_execute = time()
+        for i, t in enumerate(trades):
+            if verbose:
+                print(f"\r{i + 1} trades executed: {t} ... ", end="")
+            t.execute(universe)
+        if verbose:
+            _time = time() - _begin_time_execute
+            print(f"Done. (Runtime: {_time:.4f} sec)")
+
+        self.trades = trades
+
+        if verbose:
+            _time = time() - _begin_time
+            final_wealth = self.score("final_wealth")
+            print(f"Done. Final wealth: {final_wealth:.2f} (Runtime: {_time:.4f} sec)")
+
+        return self
+
+    def score(self, metric_name) -> float:
+        """
+        Returns the value of a metric of self.
+
+        Parameters
+        ----------
+        - metric_name : str
+            Metric to evaluate.
+
+        Returns
+        -------
+        metric_value : float
+            Metric.
+        """
+        if not hasattr(self, "trades"):
+            raise NotRunError("Strategy has not been run")
+
+        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def history(self) -> pd.DataFrame:
         """
@@ -135,7 +174,7 @@ class Strategy(abc.ABC):
 
         data = {}
 
-        n_orders = np.array([t.n_orders for t in self.trades])
+        n_orders = np.array([t.asset.size for t in self.trades])
 
         data["trade_id"] = np.repeat(np.arange(len(self.trades)), n_orders)
         data["asset"] = np.concatenate([t.asset for t in self.trades])
@@ -194,58 +233,6 @@ class Strategy(abc.ABC):
 
         return pd.Series(exposure, index=self.universe.index)
 
-    def run(self, universe, verbose=True):
-        """
-        Run a backtesting of strategy.
-
-        Parameters
-        ----------
-        - universe : pandas.DataFrame
-            Historical price data to apply this strategy.
-            The index represents timestamps and the column is the assets.
-        - verbose : bool, default True
-            Verbose mode.
-
-        Returns
-        -------
-        self
-        """
-        _begin_time = time()
-
-        self.universe = universe
-
-        # Yield trades
-        _begin_time_yield = time()
-        trades = []
-        for i, t in enumerate(self(universe, to_list=False) or []):
-            if verbose:
-                print(f"\r{i + 1} trades returned: {t} ... ", end="")
-            trades.append(t)
-        if len(trades) == 0:
-            raise NoTradeError("No trade.")
-        if verbose:
-            _time = time() - _begin_time_yield
-            print(f"Done. (Runtume: {_time:.4f} sec)")
-
-        # Execute trades
-        _begin_time_execute = time()
-        for i, t in enumerate(trades):
-            if verbose:
-                print(f"\r{i + 1} trades executed: {t} ... ", end="")
-            t.execute(universe)
-        if verbose:
-            _time = time() - _begin_time_execute
-            print(f"Done. (Runtime: {_time:.4f} sec)")
-
-        self.trades = trades
-
-        if verbose:
-            _time = time() - _begin_time
-            final_wealth = self.score("final_wealth")
-            print(f"Done. Final wealth: {final_wealth:.2f} (Runtime: {_time:.4f} sec)")
-
-        return self
-
     def get_logic(self):
         return getattr(self, "logic_func", self.logic)
 
@@ -283,25 +270,6 @@ class Strategy(abc.ABC):
                 self.params[key] = value
 
         return self
-
-    def score(self, metric_name) -> float:
-        """
-        Returns the value of a metric of self.
-
-        Parameters
-        ----------
-        - metric_name : str
-            Metric to evaluate.
-
-        Returns
-        -------
-        metric_value : float
-            Metric.
-        """
-        if not hasattr(self, "trades"):
-            raise NotRunError("Strategy has not been run")
-
-        return metric_from_name(metric_name)(self.trades, self.universe)
 
     def evaluate(self, metric):
         raise DeprecationWarning(
