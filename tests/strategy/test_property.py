@@ -21,39 +21,7 @@ class SampleStrategy(Strategy):
         yield Trade(asset=["A2", "A3"])
 
 
-class NoDescriptionStrategy(Strategy):
-    def __init__(self):
-        pass
 
-    def logic(self, univers):
-        pass
-
-
-class TestName:
-    """
-    Test `Strategy.name`.
-    """
-
-    def test_value(self):
-        strategy = SampleStrategy()
-        assert strategy.name == "SampleStrategy"
-
-
-class TestDescription:
-    """
-    Test `Strategy.description`.
-    """
-
-    def test_value(self):
-        strategy = SampleStrategy()
-        assert (
-            strategy.description
-            == "This is my favorite strategy.\n\nEverybody loves this strategy."
-        )
-
-    def test_no_description(self):
-        strategy = NoDescriptionStrategy()
-        assert strategy.description is None
 
 
 # class TestIsRun:
@@ -78,30 +46,6 @@ class TestDescription:
 #     def test_value(self):
 #         strategy = SampleStrategy(param0=0.0, param1=1.0)
 #         assert strategy.params == {"param0": 0.0, "param1": 1.0}
-
-
-class TestNTrades:
-    """
-    Test `Strategy.n_trades`.
-    """
-
-    universe = pd.DataFrame({f"A{i}": range(10) for i in range(4)})
-
-    def test_value(self):
-        strategy = SampleStrategy().run(self.universe)
-        assert strategy.n_trades == 2
-
-
-class TestNOrders:
-    """
-    Test `Strategy.n_orders`.
-    """
-
-    universe = pd.DataFrame({f"A{i}": range(10) for i in range(4)})
-
-    def test_value(self):
-        strategy = SampleStrategy().run(self.universe)
-        assert strategy.n_orders == 4
 
 
 class TestHistory:

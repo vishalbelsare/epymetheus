@@ -46,8 +46,8 @@ class TestInit:
             ep.trade("A", shut_bar=0)
 
 
-class TestExecute:
-    pass
+# class TestExecute:
+#     pass
 
 
 class TestArrayValue:
@@ -225,63 +225,63 @@ class TestArrayValue:
 #             assert np.allclose(abs(a) * result0, resultA)
 
 
-class TestArrayPnl:
-    """
-    Test `Trade.series_pnl()`.
-    """
+# class TestArrayPnl:
+#     """
+#     Test `Trade.series_pnl()`.
+#     """
 
-    # TODO
+#     # TODO
 
 
-class TestSeriesPnl:
-    """
-    Test `Trade.series_pnl()`.
-    """
+# class TestSeriesPnl:
+#     """
+#     Test `Trade.series_pnl()`.
+#     """
 
-    universe_hand = pd.DataFrame(
-        {
-            "A0": [3, 1, 4, 1, 5, 9, 2],
-            "A1": [2, 7, 1, 8, 2, 8, 1],
-        },
-        index=range(7),
-        dtype=float,
-    )
-    trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], entry=1, exit=3)
-    expected0 = [0, 0, 24, -3, -3, -3, -3]
+#     universe_hand = pd.DataFrame(
+#         {
+#             "A0": [3, 1, 4, 1, 5, 9, 2],
+#             "A1": [2, 7, 1, 8, 2, 8, 1],
+#         },
+#         index=range(7),
+#         dtype=float,
+#     )
+#     trade0 = ep.trade(asset=["A0", "A1"], lot=[2, -3], entry=1, exit=3)
+#     expected0 = [0, 0, 24, -3, -3, -3, -3]
 
-    @pytest.mark.parametrize("trade, expected", [(trade0, expected0)])
-    def test_value_hand(self, trade, expected):
-        result = trade.series_pnl(universe=self.universe_hand)
-        assert np.allclose(result, expected)
+#     @pytest.mark.parametrize("trade, expected", [(trade0, expected0)])
+#     def test_value_hand(self, trade, expected):
+#         result = trade.series_pnl(universe=self.universe_hand)
+#         assert np.allclose(result, expected)
 
-    def test_value_zero(self):
-        trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
-        result = trade.series_pnl(self.universe_hand)
-        expected = np.zeros(len((self.universe_hand.index)))
-        assert np.allclose(result, expected)
+#     def test_value_zero(self):
+#         trade = ep.trade(asset=["A0", "A1"], lot=[0, 0], entry=1, exit=3)
+#         result = trade.series_pnl(self.universe_hand)
+#         expected = np.zeros(len((self.universe_hand.index)))
+#         assert np.allclose(result, expected)
 
-    @pytest.mark.parametrize("seed", range(1))
-    def test_linearity_add(self, seed):
-        np.random.seed(seed)
-        lot0, lot1 = np.random.random(2)
-        trade0 = ep.trade(asset="A0", lot=lot0, entry=1, exit=3)
-        trade1 = ep.trade(asset="A0", lot=lot1, entry=1, exit=3)
-        tradeA = ep.trade(asset="A0", lot=lot0 + lot1, entry=1, exit=3)
-        result0 = trade0.series_pnl(self.universe_hand)
-        result1 = trade1.series_pnl(self.universe_hand)
-        resultA = tradeA.series_pnl(self.universe_hand)
-        assert np.allclose(result0 + result1, resultA)
+#     @pytest.mark.parametrize("seed", range(1))
+#     def test_linearity_add(self, seed):
+#         np.random.seed(seed)
+#         lot0, lot1 = np.random.random(2)
+#         trade0 = ep.trade(asset="A0", lot=lot0, entry=1, exit=3)
+#         trade1 = ep.trade(asset="A0", lot=lot1, entry=1, exit=3)
+#         tradeA = ep.trade(asset="A0", lot=lot0 + lot1, entry=1, exit=3)
+#         result0 = trade0.series_pnl(self.universe_hand)
+#         result1 = trade1.series_pnl(self.universe_hand)
+#         resultA = tradeA.series_pnl(self.universe_hand)
+#         assert np.allclose(result0 + result1, resultA)
 
-    @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
-    @pytest.mark.parametrize("seed", range(1))
-    def test_linearity_mul(self, a, seed):
-        np.random.seed(42)
-        universe = make_randomwalk()
-        trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
-        tradeA = a * trade0
-        result0 = trade0.series_pnl(universe)
-        resultA = tradeA.series_pnl(universe)
-        assert np.allclose(a * result0, resultA)
+#     @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
+#     @pytest.mark.parametrize("seed", range(1))
+#     def test_linearity_mul(self, a, seed):
+#         np.random.seed(42)
+#         universe = make_randomwalk()
+#         trade0 = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
+#         tradeA = a * trade0
+#         result0 = trade0.series_pnl(universe)
+#         resultA = tradeA.series_pnl(universe)
+#         assert np.allclose(a * result0, resultA)
 
 
 class TestFinalPnl:
@@ -294,15 +294,15 @@ class TestFinalPnl:
         dtype=float,
     )
 
-    @pytest.mark.parametrize("seed", range(10))
-    def test_random(self, seed):
-        np.random.seed(42)
-        universe = make_randomwalk(n_bars=100, n_assets=10)
-        trade = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
-        result = trade.final_pnl(universe)
-        expected = trade.array_pnl(universe)[-1]
+    # @pytest.mark.parametrize("seed", range(10))
+    # def test_random(self, seed):
+    #     np.random.seed(42)
+    #     universe = make_randomwalk(n_bars=100, n_assets=10)
+    #     trade = RandomStrategy(n_trades=1, seed=seed).run(universe).trades[0]
+    #     result = trade.final_pnl(universe)
+    #     expected = trade.array_pnl(universe)[-1]
 
-        assert np.allclose(result, expected)
+    #     assert np.allclose(result, expected)
 
     @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
     @pytest.mark.parametrize("seed", range(1))
