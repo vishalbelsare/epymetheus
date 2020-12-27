@@ -4,12 +4,12 @@ from .. import ts
 
 
 def _pnls(trades, universe) -> np.array:
-    return np.array([t.final_pnl(universe) for t in trades])
+    return np.array([np.sum(t.final_pnl(universe)) for t in trades])
 
 
 def final_wealth(trades, universe) -> float:
     # maybe faster than wealth[-1]
-    return np.sum([t.final_pnl(universe) for t in trades])
+    return np.sum(_pnls(trades, universe))
 
 
 def num_win(trades, universe) -> int:
