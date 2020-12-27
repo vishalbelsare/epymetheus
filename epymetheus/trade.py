@@ -59,11 +59,11 @@ def trade(
     trade(['AAPL'], lot=[1.], take=200.0, stop=-100.0)
     """
     if open_bar is not None:
-        raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
         entry = open_bar if entry is None else entry
+        raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
     if shut_bar is not None:
-        raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
         exit = shut_bar if exit is None else exit
+        raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
 
     return Trade._trade(
         asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot
