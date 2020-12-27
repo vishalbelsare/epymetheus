@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class Universe:
     def __init__(self, prices, name=None):
         self.prices = prices
