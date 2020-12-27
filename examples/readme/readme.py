@@ -1,7 +1,7 @@
 import sys
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn
 
 
@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     # ---
 
-    import pandas as pd
     import epymetheus as ep
+    import pandas as pd
 
     def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
         # I get $100 allowance on the first business day of each month
@@ -30,10 +30,7 @@ if __name__ == "__main__":
             n_shares = allowance // universe.at[date, cheapest_stock]
 
             trade = n_shares * ep.trade(
-                cheapest_stock,
-                open_bar=date,
-                take=profit_take,
-                stop=stop_loss,
+                cheapest_stock, date, take=profit_take, stop=stop_loss
             )
             trades.append(trade)
 
@@ -56,12 +53,9 @@ if __name__ == "__main__":
 
     # ---
 
-    history = my_strategy.history.to_dataframe()
-    history.head()
-    print(">>> history.head()")
-    print_as_comment(history.head())
-
-    print(sum(history.pnl))
+    my_strategy.history.head()
+    print(">>> my_strategy.history.head()")
+    print_as_comment(my_strategy.history.head())
 
     # ---
 
@@ -79,30 +73,26 @@ if __name__ == "__main__":
 
     # ---
 
-    from epymetheus.metrics import Drawdown
-    from epymetheus.metrics import Exposure
-    from epymetheus.metrics import MaxDrawdown
-    from epymetheus.metrics import SharpeRatio
+    my_strategy.score("final_wealth")
+    my_strategy.score("max_drawdown")
+    my_strategy.score("sharpe_ratio")
+    # ts.drawdown(strategy.trades, universe)
+    # max_drawdown = my_strategy.score(MaxDrawdown())
+    # sharpe_ratio = my_strategy.score(SharpeRatio())
 
-    drawdown = my_strategy.score(Drawdown())
-    max_drawdown = my_strategy.score(MaxDrawdown())
-    net_exposure = my_strategy.score(Exposure(net=True))
-    abs_exposure = my_strategy.score(Exposure(net=False))
-    sharpe_ratio = my_strategy.score(SharpeRatio())
+    # plt.figure(figsize=(16, 4))
+    # plt.plot(pd.Series(drawdown, index=universe.index), linewidth=1)
+    # plt.xlabel("date")
+    # plt.ylabel("drawdown [USD]")
+    # plt.title("Drawdown")
+    # plt.savefig("drawdown.png", bbox_inches="tight", pad_inches=0.1)
 
-    plt.figure(figsize=(16, 4))
-    plt.plot(pd.Series(drawdown, index=universe.index), linewidth=1)
-    plt.xlabel("date")
-    plt.ylabel("drawdown [USD]")
-    plt.title("Drawdown")
-    plt.savefig("drawdown.png", bbox_inches="tight", pad_inches=0.1)
-
-    plt.figure(figsize=(16, 4))
-    plt.plot(pd.Series(net_exposure, index=universe.index), linewidth=1)
-    plt.xlabel("date")
-    plt.ylabel("net exposure [USD]")
-    plt.title("Net exposure")
-    plt.savefig("net_exposure.png", bbox_inches="tight", pad_inches=0.1)
+    # plt.figure(figsize=(16, 4))
+    # plt.plot(pd.Series(net_exposure, index=universe.index), linewidth=1)
+    # plt.xlabel("date")
+    # plt.ylabel("net exposure [USD]")
+    # plt.title("Net exposure")
+    # plt.savefig("net_exposure.png", bbox_inches="tight", pad_inches=0.1)
 
     # ---
 
