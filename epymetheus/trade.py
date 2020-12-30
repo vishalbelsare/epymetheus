@@ -5,16 +5,7 @@ import numpy as np
 from epymetheus.universe import Universe
 
 
-def trade(
-    asset,
-    entry=None,
-    exit=None,
-    take=None,
-    stop=None,
-    lot=1.0,
-    open_bar=None,
-    shut_bar=None,
-):
+def trade(asset, entry=None, exit=None, take=None, stop=None, lot=1.0, **kwargs):
     """
     Initialize `Trade`.
 
@@ -58,16 +49,7 @@ def trade(
     >>> trade("AAPL", take=200.0, stop=-100.0)
     trade(['AAPL'], lot=[1.], take=200.0, stop=-100.0)
     """
-    if open_bar is not None:
-        entry = open_bar if entry is None else entry
-        raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
-    if shut_bar is not None:
-        exit = shut_bar if exit is None else exit
-        raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
-
-    return Trade._trade(
-        asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot
-    )
+    return Trade(asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot, **kwargs)
 
 
 class Trade:
@@ -76,7 +58,7 @@ class Trade:
 
     Parameters
     ----------
-    - asset : str or array of str
+    - asset : np.array
         Name of assets.
     - entry : object or None, default None
         Datetime of entry.
@@ -86,7 +68,7 @@ class Trade:
         Threshold of profit-take.
     - stop : float < 0 or None, default None
         Threshold of stop-loss.
-    - lot : float, default 1.0
+    - lot : np.array, default 1.0
         Lot to trade in unit of share.
 
     Attributes
@@ -104,27 +86,26 @@ class Trade:
         take=None,
         stop=None,
         lot=1.0,
+        open_bar=None,
+        shut_bar=None,
     ):
+        if open_bar is not None:
+            entry = open_bar if entry is None else entry
+            raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
+        if shut_bar is not None:
+            exit = shut_bar if exit is None else exit
+            raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
+
+        # Convert to np.array
+        asset = np.asarray(asset).reshape(-1)
+        lot = np.broadcast_to(np.asarray(lot), asset.shape)
+
         self.asset = asset
         self.entry = entry
         self.exit = exit
         self.take = take
         self.stop = stop
         self.lot = lot
-
-    @classmethod
-    def _trade(cls, asset, entry, exit, take, stop, lot):
-        """
-        Initialize `Trade`.
-
-        Returns
-        -------
-        trade : Trade
-        """
-        asset = np.asarray(asset).reshape(-1)
-        lot = np.broadcast_to(np.asarray(lot), asset.shape)
-
-        return cls(asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot)
 
     def execute(self, universe):
         """
@@ -164,10 +145,6 @@ class Trade:
         3
         """
         universe = self.__to_dataframe(universe)
-
-        # If already executed
-        if hasattr(self, "close"):
-            return self
 
         entry = universe.index[0] if self.entry is None else self.entry
         exit = universe.index[-1] if self.exit is None else self.exit
@@ -266,10 +243,18 @@ class Trade:
         return final_pnl
 
     def __eq__(self, other):
+        def eq(t0, t1, attr):
+            attr0 = getattr(t0, attr)
+            attr1 = getattr(t1, attr)
+            if isinstance(attr0, np.ndarray) and isinstance(attr1, np.ndarray):
+                return np.array_equal(attr0, attr1)
+            else:
+                return attr0 == attr1
+
+        # close does not have to be tested:
+        # if the following attributes are identical, close will be the same too
         attrs = ("asset", "entry", "exit", "take", "stop", "lot")
-        return all(
-            getattr(self, attr, None) == getattr(other, attr, None) for attr in attrs
-        )
+        return all(eq(self, other, attr) for attr in attrs)
 
     def __mul__(self, num):
         return self.__rmul__(num)
@@ -319,7 +304,7 @@ class Trade:
         >>> trade(["AMZN", "AAPL"], lot=[2.0, 4.0]) / 2.0
         trade(['AMZN' 'AAPL'], lot=[1. 2.])
         """
-        return self.__mul__(1.0 / num)
+        return (1.0 / num) * self
 
     def __repr__(self):
         """

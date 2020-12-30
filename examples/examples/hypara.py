@@ -28,16 +28,16 @@ if __name__ == "__main__":
         profit_take = trial.suggest_int("profit_take", 10, 100)
         stop_loss = trial.suggest_int("stop_loss", -100, -10)
         my_strategy = ep.create_strategy(
-            dumb_strategy,
-            profit_take=profit_take,
-            stop_loss=stop_loss,
+            dumb_strategy, profit_take=profit_take, stop_loss=stop_loss,
         )
         my_strategy.run(universe, verbose=False)
 
         return my_strategy.score("final_wealth")
 
     # study = optuna.create_study(direction="maximize")
-    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.RandomSampler(seed=42))
+    study = optuna.create_study(
+        direction="maximize", sampler=optuna.samplers.RandomSampler(seed=42)
+    )
     study.optimize(objective, n_trials=100)
 
     print(">>> study.best_params")

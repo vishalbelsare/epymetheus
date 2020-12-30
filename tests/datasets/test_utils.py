@@ -1,6 +1,5 @@
-import pytest  # noqa: F401
-
 import pandas as pd
+import pytest  # noqa: F401
 
 from epymetheus.datasets._utils import fill_and_cut
 

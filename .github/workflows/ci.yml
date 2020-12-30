@@ -19,9 +19,9 @@ on:
 jobs:
   Test:
     name: Test
-    
+
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         python-version: ['3.6', '3.7', '3.8']
@@ -30,7 +30,7 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
-      
+
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -61,7 +61,7 @@ jobs:
     name: Lint
 
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         python-version: ['3.8']
@@ -70,7 +70,7 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
-      
+
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
