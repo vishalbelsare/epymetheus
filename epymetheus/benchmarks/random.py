@@ -45,12 +45,7 @@ trade(['2'], lot=[1.], entry=6, exit=7)]
     """
 
     def __init__(
-        self,
-        n_trades=10,
-        max_n_assets=1,
-        max_lot=1.0,
-        min_lot=1.0,
-        seed=None,
+        self, n_trades=10, max_n_assets=1, max_lot=1.0, min_lot=1.0, seed=None,
     ):
         self._n_trades = n_trades
         self.max_n_assets = max_n_assets
