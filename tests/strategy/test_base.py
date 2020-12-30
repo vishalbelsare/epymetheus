@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from numpy.testing import assert_equal
 
 from epymetheus import Strategy
 from epymetheus import create_strategy
 from epymetheus import trade
+from epymetheus import ts
 from epymetheus.benchmarks import DeterminedStrategy
 from epymetheus.benchmarks import RandomStrategy
 from epymetheus.datasets import make_randomwalk
+from epymetheus.exceptions import NoTradeError
 from epymetheus.exceptions import NotRunError
 from epymetheus.metrics import avg_lose
 from epymetheus.metrics import avg_pnl
@@ -19,7 +20,6 @@ from epymetheus.metrics import num_lose
 from epymetheus.metrics import num_win
 from epymetheus.metrics import rate_lose
 from epymetheus.metrics import rate_win
-from epymetheus import ts
 
 metrics = [
     avg_lose,
@@ -48,6 +48,8 @@ class TestStrategy:
     Test `Strategy`
     """
 
+    universe = pd.DataFrame({"A": range(10), "B": range(10)})
+
     @staticmethod
     def my_strategy(universe, param_1, param_2):
         """
@@ -56,17 +58,50 @@ class TestStrategy:
         yield (param_1 * trade("A"))
         yield (param_2 * trade("B"))
 
+    # Initializing
+
     def test_init_from_func(self):
         strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
-        universe = None
+        universe = self.universe
 
         assert strategy(universe) == [1.0 * trade("A"), 2.0 * trade("B")]
 
     def test_init_from_init(self):
         strategy = MyStrategy(param_1=1.0, param_2=2.0)
-        universe = None
+        universe = self.universe
 
         assert strategy(universe) == [1.0 * trade("A"), 2.0 * trade("B")]
+
+    @pytest.mark.parametrize("verbose", [True, False])
+    def test_run_trades(self, verbose):
+        """Test if trades are the same with call"""
+        strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
+        universe = self.universe
+
+        result = strategy.run(universe, verbose=verbose).trades
+        expected = strategy(universe)
+
+        assert result == expected
+
+    @pytest.mark.parametrize("verbose", [True, False])
+    def test_run_notradeerror(self, verbose):
+        strategy = create_strategy(lambda universe: [])
+        universe = self.universe
+        with pytest.raises(NoTradeError):
+            strategy.run(universe, verbose=verbose)
+
+    def test_run_execution(self):
+        strategy = RandomStrategy()
+        universe = make_randomwalk()
+
+        np.random.seed(42)
+        trades = strategy.run(universe)
+        result = [t.close for t in strategy.trades]
+
+        np.random.seed(42)
+        expected = [t.execute(universe).close for t in strategy(universe)]
+
+        assert result == expected
 
     def test_get_params(self):
         strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
@@ -141,10 +176,7 @@ class TestStrategy:
         strategy = DeterminedStrategy(trades).run(universe)
         wealth = strategy.wealth()
 
-        expected = pd.Series(
-            [0, 0, 1, 3, 4, 4, 4, 4, 4, 4],
-            index=universe.index,
-        )
+        expected = pd.Series([0, 0, 1, 3, 4, 4, 4, 4, 4, 4], index=universe.index,)
 
         pd.testing.assert_series_equal(wealth, expected, check_dtype=False)
 

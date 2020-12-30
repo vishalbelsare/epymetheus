@@ -1,6 +1,5 @@
-import pytest
-
 import pandas as pd
+import pytest
 
 from epymetheus import create_strategy
 from epymetheus.benchmarks import BuyAndHold
@@ -21,9 +20,10 @@ class TestBuyAndHold:
 
 
 class TestDumbStrategy:
-
     def test(self):
         universe = make_randomwalk()
-        universe.index = pd.date_range("2000-01-01", "2020-12-31")[:universe.index.size]
+        universe.index = pd.date_range("2000-01-01", "2020-12-31")[
+            : universe.index.size
+        ]
         strategy = create_strategy(dumb_strategy, profit_take=2.0, stop_loss=-1.0)
         strategy.run(universe)
