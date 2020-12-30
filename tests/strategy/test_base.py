@@ -33,6 +33,10 @@ metrics = [
 ]
 
 
+def my_func(universe, param_1, param_2):
+    return
+
+
 class MyStrategy(Strategy):
     def __init__(self, param_1, param_2):
         self.param_1 = param_1
@@ -227,6 +231,13 @@ class TestStrategy:
         strategy = create_strategy(self.my_strategy, param_1=1.0, param_2=2.0)
         with pytest.raises(DeprecationWarning):
             strategy.evaluate(None)
+
+    def test_repr(self):
+        strategy = create_strategy(my_func, param_1=1.0, param_2=2.0)
+        assert repr(strategy) == "strategy(my_func, param_1=1.0, param_2=2.0)"
+
+        strategy = MyStrategy(param_1=1.0, param_2=2.0)
+        assert repr(strategy) == "MyStrategy"
 
 
 # import pytest
