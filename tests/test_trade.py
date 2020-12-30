@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import epymetheus as ep
 from epymetheus import trade
 from epymetheus.benchmarks import RandomStrategy
 from epymetheus.datasets import make_randomwalk
@@ -18,46 +17,60 @@ class TestTrade:
         },
     )
 
+    def test_init_array(self):
+        t = trade("A", lot=1.0)
+        assert isinstance(t.asset, np.ndarray)
+        assert isinstance(t.lot, np.ndarray)
+        t = trade("A", lot=[1.0])
+        assert isinstance(t.asset, np.ndarray)
+        assert isinstance(t.lot, np.ndarray)
+        t = trade(["A"], lot=[1.0])
+        assert isinstance(t.asset, np.ndarray)
+        assert isinstance(t.lot, np.ndarray)
+        t = trade(["A", "B"], lot=1.0)
+        t = trade(["A", "B"], lot=[1.0, 2.0])
+        assert isinstance(t.asset, np.ndarray)
+        assert isinstance(t.lot, np.ndarray)
+
     def test_init_shape(self):
-        trade = ep.trade("A", lot=1.0)
-        assert trade.asset.shape == (1,)
-        assert trade.lot.shape == (1,)
+        t = trade("A", lot=1.0)
+        assert t.asset.shape == (1,)
+        assert t.lot.shape == (1,)
 
-        trade = ep.trade(["A"], lot=1.0)
-        assert trade.asset.shape == (1,)
-        assert trade.lot.shape == (1,)
+        t = trade(["A"], lot=1.0)
+        assert t.asset.shape == (1,)
+        assert t.lot.shape == (1,)
 
-        trade = ep.trade("A", lot=[1.0])
-        assert trade.asset.shape == (1,)
-        assert trade.lot.shape == (1,)
+        t = trade("A", lot=[1.0])
+        assert t.asset.shape == (1,)
+        assert t.lot.shape == (1,)
 
-        trade = ep.trade(["A", "B"], lot=1.0)
-        assert trade.asset.shape == (2,)
-        assert trade.lot.shape == (2,)
+        t = trade(["A", "B"], lot=1.0)
+        assert t.asset.shape == (2,)
+        assert t.lot.shape == (2,)
 
-        trade = ep.trade(["A", "B"], lot=[1.0])
-        assert trade.asset.shape == (2,)
-        assert trade.lot.shape == (2,)
+        t = trade(["A", "B"], lot=[1.0])
+        assert t.asset.shape == (2,)
+        assert t.lot.shape == (2,)
 
-        trade = ep.trade(["A", "B"], lot=[1.0, 2.0])
-        assert trade.asset.shape == (2,)
-        assert trade.lot.shape == (2,)
+        t = trade(["A", "B"], lot=[1.0, 2.0])
+        assert t.asset.shape == (2,)
+        assert t.lot.shape == (2,)
 
     def test_init_deprecation(self):
         with pytest.raises(DeprecationWarning):
-            ep.trade("A", open_bar=0)
+            trade("A", open_bar=0)
         with pytest.raises(DeprecationWarning):
-            ep.trade("A", shut_bar=0)
+            trade("A", shut_bar=0)
 
     def test_repr(self):
-        trade = ep.trade("A")
-        assert repr(trade) == "trade(['A'], lot=[1.])"
+        t = trade("A")
+        assert repr(t) == "trade(['A'], lot=[1.])"
 
-        trade = ep.trade("A", lot=2, take=3.0, stop=-3.0, entry="B0", exit="B1")
+        t = trade("A", lot=2, take=3.0, stop=-3.0, entry="B0", exit="B1")
 
         assert (
-            repr(trade)
-            == "trade(['A'], lot=[2], entry=B0, exit=B1, take=3.0, stop=-3.0)"
+            repr(t) == "trade(['A'], lot=[2], entry=B0, exit=B1, take=3.0, stop=-3.0)"
         )
 
     def test_array_value_value_hand(self):
@@ -153,12 +166,8 @@ class TestTrade:
         assert t == trade("A")
         assert t == trade("A", lot=[1])
         assert t == trade("A", lot=[1.0])
-        assert t == trade("A", lot=np.array([1]))
-        assert t == trade("A", lot=np.array([1.0]))
         assert t != trade("A", lot=-1)
         assert t != trade("A", lot=[-1.0])
-        assert t != trade("A", lot=np.array([-1]))
-        assert t != trade("A", lot=np.array([-1.0]))
 
         t = trade("A", lot=2)
         assert t == trade("A", lot=2)
@@ -172,6 +181,30 @@ class TestTrade:
         assert t != trade("A", lot=np.array([-1]))
         assert t != trade("A", lot=np.array([-1.0]))
 
+        t = trade(["A", "B"], lot=[1, 2])
+        assert t == trade(["A", "B"], lot=[1, 2])
+        assert t == trade(["A", "B"], lot=[1.0, 2.0])
+        assert t == trade(["A", "B"], lot=np.array([1, 2]))
+        assert t == trade(["A", "B"], lot=np.array([1.0, 2.0]))
+        assert t != trade(["A", "B"], lot=1.0)
+        assert t != trade(["A", "B"], lot=[-1.0, 2.0])
+        assert t != trade(["A", "B"], lot=[1.0, -1.0])
+
+        t = trade(["A", "B"], lot=[1, 2], entry=1)
+        assert t == trade(["A", "B"], lot=[1, 2], entry=1)
+        assert t != trade(["A", "B"], lot=[1, 2], entry=2)
+
+        t = trade(["A", "B"], lot=[1, 2], exit=1)
+        assert t == trade(["A", "B"], lot=[1, 2], exit=1)
+        assert t != trade(["A", "B"], lot=[1, 2], exit=2)
+
+        t = trade(["A", "B"], lot=[1, 2], take=1)
+        assert t == trade(["A", "B"], lot=[1, 2], take=1)
+        assert t != trade(["A", "B"], lot=[1, 2], take=2)
+
+        t = trade(["A", "B"], lot=[1, 2], stop=1)
+        assert t == trade(["A", "B"], lot=[1, 2], stop=1)
+        assert t != trade(["A", "B"], lot=[1, 2], stop=2)
 
     # @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
     # def test_mul(self, a):
@@ -287,7 +320,7 @@ class TestTrade:
 
 
 # # def test_execute_take():
-# #     universe = pd.DataFrame({"Asset0": np.arange(100, 200)})
+# #     universe = pd.DataFrame({"Asset0": np.arange(100, 200)}
 
 # #     trade = ep.trade("Asset0", lot=1.0, take=1.9, entry=1, exit=5)
 # #     trade.execute(universe)
