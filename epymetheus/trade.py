@@ -5,16 +5,7 @@ import numpy as np
 from epymetheus.universe import Universe
 
 
-def trade(
-    asset,
-    entry=None,
-    exit=None,
-    take=None,
-    stop=None,
-    lot=1.0,
-    open_bar=None,
-    shut_bar=None,
-):
+def trade(asset, entry=None, exit=None, take=None, stop=None, lot=1.0, **kwargs):
     """
     Initialize `Trade`.
 
@@ -58,16 +49,7 @@ def trade(
     >>> trade("AAPL", take=200.0, stop=-100.0)
     trade(['AAPL'], lot=[1.], take=200.0, stop=-100.0)
     """
-    if open_bar is not None:
-        entry = open_bar if entry is None else entry
-        raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
-    if shut_bar is not None:
-        exit = shut_bar if exit is None else exit
-        raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
-
-    return Trade._trade(
-        asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot
-    )
+    return Trade(asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot, **kwargs)
 
 
 class Trade:
@@ -76,7 +58,7 @@ class Trade:
 
     Parameters
     ----------
-    - asset : str or array of str
+    - asset : np.array
         Name of assets.
     - entry : object or None, default None
         Datetime of entry.
@@ -86,7 +68,7 @@ class Trade:
         Threshold of profit-take.
     - stop : float < 0 or None, default None
         Threshold of stop-loss.
-    - lot : float, default 1.0
+    - lot : np.array, default 1.0
         Lot to trade in unit of share.
 
     Attributes
@@ -97,28 +79,33 @@ class Trade:
     """
 
     def __init__(
-        self, asset, entry=None, exit=None, take=None, stop=None, lot=1.0,
+        self,
+        asset,
+        entry=None,
+        exit=None,
+        take=None,
+        stop=None,
+        lot=1.0,
+        open_bar=None,
+        shut_bar=None,
     ):
+        if open_bar is not None:
+            entry = open_bar if entry is None else entry
+            raise DeprecationWarning("`open_bar` is deprecated. Use `entry` instead.")
+        if shut_bar is not None:
+            exit = shut_bar if exit is None else exit
+            raise DeprecationWarning("`shut_bar` is deprecated. Use `exit` instead.")
+
+        # Convert to np.array
+        asset = np.asarray(asset).reshape(-1)
+        lot = np.broadcast_to(np.asarray(lot), asset.shape)
+
         self.asset = asset
         self.entry = entry
         self.exit = exit
         self.take = take
         self.stop = stop
         self.lot = lot
-
-    @classmethod
-    def _trade(cls, asset, entry, exit, take, stop, lot):
-        """
-        Initialize `Trade`.
-
-        Returns
-        -------
-        trade : Trade
-        """
-        asset = np.asarray(asset).reshape(-1)
-        lot = np.broadcast_to(np.asarray(lot), asset.shape)
-
-        return cls(asset=asset, entry=entry, exit=exit, take=take, stop=stop, lot=lot)
 
     def execute(self, universe):
         """
