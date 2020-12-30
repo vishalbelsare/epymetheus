@@ -247,10 +247,18 @@ class Trade:
         return final_pnl
 
     def __eq__(self, other):
+        def eq(t0, t1, attr):
+            attr0 = getattr(t0, attr)
+            attr1 = getattr(t1, attr)
+            if isinstance(attr0, np.ndarray) and isinstance(attr1, np.ndarray):
+                return np.array_equal(attr0, attr1)
+            else:
+                return attr0 == attr1
+
+        # close does not have to be tested:
+        # if the following attributes are identical, close will be the same too
         attrs = ("asset", "entry", "exit", "take", "stop", "lot")
-        return all(
-            getattr(self, attr, None) == getattr(other, attr, None) for attr in attrs
-        )
+        return all(eq(self, other, attr) for attr in attrs)
 
     def __mul__(self, num):
         return self.__rmul__(num)
