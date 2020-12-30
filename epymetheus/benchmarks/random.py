@@ -31,32 +31,24 @@ class RandomStrategy(Strategy):
         Maximum value of lots.
     - min_lot : 1
         Minimum value of lots.
-    - seed : int, default None
-        Seed of randomness. If None, seed will not be set.
 
     Examples
     --------
+    >>> np.random.seed(42)
     >>> from epymetheus.datasets import make_randomwalk
-    >>> strategy = RandomStrategy(n_trades=2, seed=42)
+    >>> strategy = RandomStrategy(n_trades=2)
     >>> universe = make_randomwalk(10, 3)
     >>> strategy(universe)
-    [trade(['2'], lot=[1.], entry=4, exit=7), \
-trade(['2'], lot=[1.], entry=6, exit=7)]
+    [trade(['2'], lot=[1.], entry=1, exit=8), trade(['1'], lot=[1.], entry=1, exit=4)]
     """
 
-    def __init__(
-        self, n_trades=10, max_n_assets=1, max_lot=1.0, min_lot=1.0, seed=None,
-    ):
+    def __init__(self, n_trades=10, max_n_assets=1, max_lot=1.0, min_lot=1.0):
         self._n_trades = n_trades
         self.max_n_assets = max_n_assets
         self.max_lot = max_lot
         self.min_lot = min_lot
-        self.seed = seed
 
     def logic(self, universe):
-        if self.seed is not None:
-            np.random.seed(self.seed)
-
         for _ in range(self._n_trades):
             n_assets = np.random.randint(1, self.max_n_assets + 1, size=1)[0]
             asset = list(np.random.choice(universe.columns, n_assets))
