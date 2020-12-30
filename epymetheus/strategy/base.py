@@ -83,7 +83,7 @@ class Strategy(abc.ABC):
         trades = list(trades) if to_list else trades
         return trades
 
-    def logic(self, universe, **params):
+    def logic(self, universe):
         """
         Logic to generate trades from universe.
         Override this to implement trading strategy by subclassing `Strategy`.
@@ -279,6 +279,30 @@ class Strategy(abc.ABC):
                 self._params[key] = value
 
         return self
+
+    def __repr__(self):
+        """
+        >>> def my_func(universe, param_1, param_2):
+        ...     return ...
+
+        >>> strategy = create_strategy(my_func, param_1=1.0, param_2=2.0)
+        >>> repr(strategy)
+        'strategy(my_func, param_1=1.0, param_2=2.0)'
+
+        >>> class MyStrategy(Strategy):
+        ...     pass
+
+        >>> strategy = MyStrategy()
+        >>> repr(strategy)
+        'MyStrategy'
+        """
+        if hasattr(self, "_f"):
+            fname = self._f.__name__
+            param = ", ".join(f"{k}={v}" for k, v in self.get_params().items())
+            param = f", {param}" if param != "" else ""
+            return f"strategy({fname}{param})"
+        else:
+            return self.__class__.__name__
 
     def evaluate(self, metric):
         raise DeprecationWarning(
