@@ -206,32 +206,47 @@ class TestTrade:
         assert t == trade(["A", "B"], lot=[1, 2], stop=1)
         assert t != trade(["A", "B"], lot=[1, 2], stop=2)
 
-    # @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
-    # def test_mul(self, a):
-    #     t = trade("A", entry=0, exit=1, take=2.0, stop=-3.0)
-    #     result = a * t
-    #     expect = trade("A", lot=[a], entry=0, exit=1, take=2.0, stop=-3.0)
-    #     assert result == expect
-    #     result = t * a
-    #     assert result == expect
+    @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
+    def test_mul(self, a):
+        t = trade("A", entry=0, exit=1, take=2.0, stop=-3.0)
+        result = a * t
+        expect = trade("A", lot=[a], entry=0, exit=1, take=2.0, stop=-3.0)
+        assert result == expect
+        result = t * a
+        assert result == expect
 
-    #     t = trade(["A", "B"], lot=[1.0, -2.0], entry=0, exit=1, take=2.0, stop=-3.0)
-    #     result = a * t
-    #     expect = trade(
-    #         ["A", "B"], lot=[a, -2.0 * a], entry=0, exit=1, take=2.0, stop=-3.0
-    #     )
-    #     assert result == expect
-    #     result = t * a
-    #     assert result == expect
+        t = trade(["A", "B"], lot=[1.0, -2.0], entry=0, exit=1, take=2.0, stop=-3.0)
+        result = a * t
+        expect = trade(
+            ["A", "B"], lot=[a, -2.0 * a], entry=0, exit=1, take=2.0, stop=-3.0
+        )
+        assert result == expect
+        result = t * a
+        assert result == expect
 
-    # def test_neg(self):
-    #     t = trade("A", entry=0, exit=1, take=2.0, stop=-3.0)
-    #     result = -t
-    #     expect = trade("A", lot=[-1.0], entry=0, exit=1, take=2.0, stop=-3.0)
-    #     assert result == expect
+    def test_neg(self):
+        t = trade("A", entry=0, exit=1, take=2.0, stop=-3.0)
+        result = -t
+        expect = trade("A", lot=[-1.0], entry=0, exit=1, take=2.0, stop=-3.0)
+        assert result == expect
 
-    # def test_truediv(self):
-    #     pass  # TODO
+    @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
+    def test_truediv(self):
+        t = trade("A", entry=0, exit=1, take=2.0, stop=-3.0)
+        result = a * t
+        expect = trade("A", lot=[1 / a], entry=0, exit=1, take=2.0, stop=-3.0)
+        assert result == expect
+        result = t * a
+        assert result == expect
+
+        t = trade(["A", "B"], lot=[1.0, -2.0], entry=0, exit=1, take=2.0, stop=-3.0)
+        result = a * t
+        expect = trade(
+            ["A", "B"], lot=[1 / a, -2.0 / a], entry=0, exit=1, take=2.0, stop=-3.0
+        )
+        assert result == expect
+        result = t * a
+        assert result == expect
 
 
 # @pytest.mark.parametrize("seed", params_seed)

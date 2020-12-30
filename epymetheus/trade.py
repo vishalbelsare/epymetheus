@@ -146,10 +146,6 @@ class Trade:
         """
         universe = self.__to_dataframe(universe)
 
-        # If already executed
-        if hasattr(self, "close"):
-            return self
-
         entry = universe.index[0] if self.entry is None else self.entry
         exit = universe.index[-1] if self.exit is None else self.exit
 
@@ -308,7 +304,7 @@ class Trade:
         >>> trade(["AMZN", "AAPL"], lot=[2.0, 4.0]) / 2.0
         trade(['AMZN' 'AAPL'], lot=[1. 2.])
         """
-        return self.__mul__(1.0 / num)
+        return (1.0 / num) * self
 
     def __repr__(self):
         """
