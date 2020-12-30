@@ -1,12 +1,11 @@
-import pytest
-
 import numpy as np
 import pandas as pd
+import pytest
 
 import epymetheus as ep
 from epymetheus import Trade
-from epymetheus.datasets import make_randomwalk
 from epymetheus.benchmarks import RandomStrategy
+from epymetheus.datasets import make_randomwalk
 
 
 class TestInit:
@@ -56,10 +55,7 @@ class TestArrayValue:
     """
 
     universe_hand = pd.DataFrame(
-        {
-            "A0": [3, 1, 4, 1, 5, 9, 2],
-            "A1": [2, 7, 1, 8, 2, 8, 1],
-        },
+        {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
         index=range(7),
         dtype=float,
     )
@@ -69,8 +65,7 @@ class TestArrayValue:
     expected1 = [[-6, 6], [-21, 2], [-3, 8], [-24, 2], [-6, 10], [-24, 18], [-3, 4]]
 
     @pytest.mark.parametrize(
-        "trade, expected",
-        [(trade0, expected0), (trade1, expected1)],
+        "trade, expected", [(trade0, expected0), (trade1, expected1)],
     )
     def test_value_hand(self, trade, expected):
         result = trade.array_value(universe=self.universe_hand)
@@ -286,10 +281,7 @@ class TestArrayValue:
 
 class TestFinalPnl:
     universe_hand = pd.DataFrame(
-        {
-            "A0": [3, 1, 4, 1, 5, 9, 2],
-            "A1": [2, 7, 1, 8, 2, 8, 1],
-        },
+        {"A0": [3, 1, 4, 1, 5, 9, 2], "A1": [2, 7, 1, 8, 2, 8, 1],},
         index=range(7),
         dtype=float,
     )

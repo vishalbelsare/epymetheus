@@ -1,10 +1,8 @@
+import numpy as np
 import pytest  # noqa: F401
-
 from pandas_datareader._utils import RemoteDataError
 
-import numpy as np
 from epymetheus.datasets import fetch_usstocks
-
 
 # --------------------------------------------------------------------------------
 

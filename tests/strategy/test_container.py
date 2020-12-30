@@ -1,5 +1,5 @@
-from collections import OrderedDict
 import re
+from collections import OrderedDict
 
 import pytest
 
@@ -90,12 +90,11 @@ class TestStrategyContainer:
 
 
 class TestStrategyList(TestStrategyContainer):
-
     def test_repr(self):
         s0 = create_strategy(lambda universe: [])
         s1 = create_strategy(lambda universe: [])
         container = StrategyList([s0, s1])
-        assert re.match(r'StrategyList\(\[<.+>, <.+>\]\)', repr(container))
+        assert re.match(r"StrategyList\(\[<.+>, <.+>\]\)", repr(container))
 
     def test_getitem(self):
         s0 = create_strategy(lambda universe: [])

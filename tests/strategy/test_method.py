@@ -59,8 +59,7 @@ class TestRun:
         """
         strategy = HardCodedStrategy().run(self.universe, verbose=verbose)
         expected = [
-            t.execute(self.universe).close
-            for t in (strategy.trade0, strategy.trade1)
+            t.execute(self.universe).close for t in (strategy.trade0, strategy.trade1)
         ]
         result = [trade.close for trade in strategy.trades]
         assert result == expected

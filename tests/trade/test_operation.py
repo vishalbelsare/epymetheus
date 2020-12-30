@@ -1,10 +1,11 @@
-import pytest
-
-from itertools import cycle, islice
+from itertools import cycle
+from itertools import islice
+from random import choice
+from random import choices
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
-from random import choice, choices
 
 import epymetheus as ep
 
@@ -42,7 +43,9 @@ def assert_trade_operation(trade0, trade1, operator):
     assert_array_equal(trade0.asset, trade1.asset)
     assert trade0.entry == trade1.entry
     assert trade0.exit == trade1.exit
-    assert np.allclose([operator(x) for x in np.asarray(trade0.lot)], np.asarray(trade1.lot))
+    assert np.allclose(
+        [operator(x) for x in np.asarray(trade0.lot)], np.asarray(trade1.lot)
+    )
     assert trade0.take == trade1.take
     assert trade0.stop == trade1.stop
 

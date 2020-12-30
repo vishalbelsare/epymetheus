@@ -1,8 +1,8 @@
+import pandas as pd
 import pytest  # noqa: F401
 
-import pandas as pd
-
-from epymetheus import Strategy, Trade
+from epymetheus import Strategy
+from epymetheus import Trade
 
 
 class SampleStrategy(Strategy):
@@ -19,9 +19,6 @@ class SampleStrategy(Strategy):
     def logic(self, univers):
         yield Trade(asset=["A0", "A1"])
         yield Trade(asset=["A2", "A3"])
-
-
-
 
 
 # class TestIsRun:

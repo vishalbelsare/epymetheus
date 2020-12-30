@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from numpy.testing import assert_equal
 
 from epymetheus import Strategy
 from epymetheus import create_strategy
 from epymetheus import trade
+from epymetheus import ts
 from epymetheus.benchmarks import DeterminedStrategy
 from epymetheus.benchmarks import RandomStrategy
 from epymetheus.datasets import make_randomwalk
@@ -19,7 +19,6 @@ from epymetheus.metrics import num_lose
 from epymetheus.metrics import num_win
 from epymetheus.metrics import rate_lose
 from epymetheus.metrics import rate_win
-from epymetheus import ts
 
 metrics = [
     avg_lose,
@@ -141,10 +140,7 @@ class TestStrategy:
         strategy = DeterminedStrategy(trades).run(universe)
         wealth = strategy.wealth()
 
-        expected = pd.Series(
-            [0, 0, 1, 3, 4, 4, 4, 4, 4, 4],
-            index=universe.index,
-        )
+        expected = pd.Series([0, 0, 1, 3, 4, 4, 4, 4, 4, 4], index=universe.index,)
 
         pd.testing.assert_series_equal(wealth, expected, check_dtype=False)
 

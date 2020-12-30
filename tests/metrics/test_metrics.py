@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import epymetheus.ts as ts
 from epymetheus import trade
 from epymetheus.benchmarks import RandomStrategy
 from epymetheus.datasets import make_randomwalk
@@ -9,13 +10,12 @@ from epymetheus.metrics import avg_lose
 from epymetheus.metrics import avg_pnl
 from epymetheus.metrics import avg_win
 from epymetheus.metrics import final_wealth
+from epymetheus.metrics import max_drawdown
 from epymetheus.metrics import metric_from_name
 from epymetheus.metrics import num_lose
 from epymetheus.metrics import num_win
 from epymetheus.metrics import rate_lose
 from epymetheus.metrics import rate_win
-from epymetheus.metrics import max_drawdown
-import epymetheus.ts as ts
 
 
 class TestFinalWealth:
@@ -124,6 +124,7 @@ class TestAvgPnl:
         expected = final_wealth(trades, universe).item()
 
         assert np.isclose(tot_pnl, expected)
+
 
 class TestMaxDrawdown:
     def test(self):
