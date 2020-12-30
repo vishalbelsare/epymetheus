@@ -89,7 +89,7 @@ jobs:
 
     - name: Run black
       run: |
-        python3 -m black --diff ${PROJECT_NAME}
+        python3 -m black --check ${PROJECT_NAME}
       if: always()
 
     - name: Run isort
