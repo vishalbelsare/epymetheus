@@ -145,6 +145,17 @@ class TestTrade:
 
         assert np.allclose(result, expected)
 
+    def test_nonexitent(self):
+        """non-existent asset, entry, exit"""
+        universe = pd.DataFrame({"A": range(10)})
+
+        with pytest.raises(KeyError):
+            t = trade("NONEXISTENT").execute(universe)
+        with pytest.raises(KeyError):
+            t = trade("A", entry=99).execute(universe)
+        with pytest.raises(KeyError):
+            t = trade("A", entry=0, exit=99).execute(universe)
+
     @pytest.mark.parametrize("a", [-2.0, -1.0, 0.0, 1.0, 2.0])
     @pytest.mark.parametrize("seed", [0])
     def test_final_pnl_linearity_mul(self, a, seed):
