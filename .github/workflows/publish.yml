@@ -1,7 +1,6 @@
 name: Publish
 
 env:
-  PROJECT_NAME: epymetheus
   PYPI_USER_NAME: simaki
 
 on:
