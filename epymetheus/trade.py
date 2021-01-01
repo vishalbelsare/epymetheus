@@ -149,6 +149,13 @@ class Trade:
         entry = universe.index[0] if self.entry is None else self.entry
         exit = universe.index[-1] if self.exit is None else self.exit
 
+        if (universe.columns.get_indexer(self.asset) == -1).any():
+            raise KeyError(f"asset {self.asset} not in universe.columns")
+        if entry not in universe.index:
+            raise KeyError(f"entry {self.entry} not in universe.index")
+        if exit not in universe.index:
+            raise KeyError(f"exit {self.exit} not in universe.index")
+
         close = exit
 
         if (self.take is not None) or (self.stop is not None):
