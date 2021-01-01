@@ -2,7 +2,7 @@ import numpy as np
 
 
 def wealth(trades, universe) -> np.array:
-    wealth = np.zeros_like(universe.iloc[:, 0])
+    wealth = np.zeros_like(universe.iloc[:, 0], dtype=float)
     for t in trades:
         i_entry = universe.index.get_indexer([t.entry]).item()
         i_entry = i_entry if i_entry != -1 else 0
@@ -25,7 +25,7 @@ def drawdown(trades, universe) -> np.array:
 
 
 def _exposure(trades, universe, net: bool):
-    exposure = np.zeros_like(universe.iloc[:, 0])
+    exposure = np.zeros_like(universe.iloc[:, 0], dtype=float)
     for t in trades:
         i_entry = universe.index.get_indexer([t.entry]).item()
         i_close = universe.index.get_indexer([t.close]).item()
