@@ -151,9 +151,9 @@ class Trade:
 
         if (universe.columns.get_indexer(self.asset) == -1).any():
             raise KeyError(f"asset {self.asset} not in universe.columns")
-        if self.entry not in universe.index:
+        if entry not in universe.index:
             raise KeyError(f"entry {self.entry} not in universe.index")
-        if self.exit not in universe.index:
+        if exit not in universe.index:
             raise KeyError(f"exit {self.exit} not in universe.index")
 
         close = exit
