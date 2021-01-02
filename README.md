@@ -1,4 +1,8 @@
-# Epymetheus: Multi-asset Backtesting Framework
+<p align="center">
+    <img alt="Epymetheus" width="80%" src="https://user-images.githubusercontent.com/24503967/103449899-0a16e000-4cf2-11eb-9296-4cce96da9309.png">
+</p>
+
+<h1 align="center">Epymetheus: Multi-asset Backtesting Framework</h1>
 
 [![python versions](https://img.shields.io/pypi/pyversions/epymetheus.svg)](https://pypi.org/project/epymetheus/)
 [![version](https://img.shields.io/pypi/v/epymetheus.svg)](https://pypi.org/project/epymetheus/)
@@ -12,7 +16,7 @@
 
 ## Introduction
 
-***Epymetheus*** (pronounced as [Epimetheus](https://en.wikipedia.org/wiki/Epimetheus)) is a multi-asset backtesting framework.
+***Epymetheus*** is a multi-asset backtesting framework.
 
 It features an intuitive user API that lets analysts try out their trade strategies right away.
 
