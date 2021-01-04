@@ -4,7 +4,6 @@ version = "0.10.3"
 description = "Multi-asset Backtesting Framework"
 authors = ["Shota Imaki <shota.imaki@icloud.com>"]
 license = "BSD-3-Clause"
-homepage = "https://github.com/simaki/epymetheus"
 repository = "https://github.com/simaki/epymetheus"
 
 [tool.poetry.dependencies]
