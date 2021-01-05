@@ -80,7 +80,7 @@ def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
         # Find the maximum number of shares that I can buy with my allowance
         n_shares = allowance // universe.at[date, cheapest_stock]
 
-        t = n_shares * trade(cheapest_stock, date, take=profit_take, stop=stop_loss)
+        t = n_shares * ep.trade(cheapest_stock, date, take=profit_take, stop=stop_loss)
         trades.append(t)
 
     return trades
