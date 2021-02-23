@@ -80,9 +80,7 @@ def dumb_strategy(universe: pd.DataFrame, profit_take, stop_loss):
         n_shares = allowance // universe.at[date, cheapest_stock]
 
         t = n_shares * ep.trade(cheapest_stock, date, take=profit_take, stop=stop_loss)
-        trades.append(t)
-
-    return trades
+        yield t
 ```
 
 You can now create your strategy with specific parameters as:
