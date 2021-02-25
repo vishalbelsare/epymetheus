@@ -4,11 +4,11 @@
 
 <h1 align="center">Epymetheus: Multi-asset Backtesting Framework</h1>
 
-[![python versions](https://img.shields.io/pypi/pyversions/epymetheus.svg)](https://pypi.org/project/epymetheus/)
-[![version](https://img.shields.io/pypi/v/epymetheus.svg)](https://pypi.org/project/epymetheus/)
+[![python versions](https://img.shields.io/pypi/pyversions/epymetheus.svg)](https://pypi.org/project/epymetheus)
+[![version](https://img.shields.io/pypi/v/epymetheus.svg)](https://pypi.org/project/epymetheus)
 [![CI](https://github.com/simaki/epymetheus/workflows/CI/badge.svg)](https://github.com/simaki/epymetheus/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/simaki/epymetheus/branch/main/graph/badge.svg)](https://codecov.io/gh/simaki/epymetheus)
-[![dl](https://img.shields.io/pypi/dm/epymetheus)](https://pypi.org/project/epymetheus/)
+[![dl](https://img.shields.io/pypi/dm/epymetheus)](https://pypi.org/project/epymetheus)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ![wealth](examples/readme/wealth.png)
