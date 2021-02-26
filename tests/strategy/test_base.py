@@ -180,7 +180,10 @@ class TestStrategy:
         strategy = DeterminedStrategy(trades).run(universe)
         wealth = strategy.wealth()
 
-        expected = pd.Series([0, 0, 1, 3, 4, 4, 4, 4, 4, 4], index=universe.index,)
+        expected = pd.Series(
+            [0, 0, 1, 3, 4, 4, 4, 4, 4, 4],
+            index=universe.index,
+        )
 
         pd.testing.assert_series_equal(wealth, expected, check_dtype=False)
 
