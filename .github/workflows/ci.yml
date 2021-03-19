@@ -9,11 +9,13 @@ on:
       - main
       - develop
       - release/*
+      - hotfix/*
   pull_request:
       branches:
       - main
       - develop
       - release/*
+      - hotfix/*
   workflow_dispatch:
 
 jobs:
