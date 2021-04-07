@@ -1,5 +1,3 @@
-# flake8: noqa
-
 from .ts import abs_exposure
 from .ts import drawdown
 from .ts import net_exposure

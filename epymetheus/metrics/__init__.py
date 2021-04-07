@@ -1,5 +1,3 @@
-# flake8: noqa
-
 from .metrics import avg_lose
 from .metrics import avg_pnl
 from .metrics import avg_win

@@ -28,7 +28,9 @@ if __name__ == "__main__":
         profit_take = trial.suggest_int("profit_take", 10, 100)
         stop_loss = trial.suggest_int("stop_loss", -100, -10)
         my_strategy = ep.create_strategy(
-            dumb_strategy, profit_take=profit_take, stop_loss=stop_loss,
+            dumb_strategy,
+            profit_take=profit_take,
+            stop_loss=stop_loss,
         )
         my_strategy.run(universe, verbose=False)
 

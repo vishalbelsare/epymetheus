@@ -1,5 +1,3 @@
-# flake8: noqa
-
 from epymetheus.strategy import Strategy
 from epymetheus.strategy import create_strategy
 from epymetheus.trade import Trade
