@@ -1,10 +1,9 @@
 import sys
 
-import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn
-
 import optuna
+import pandas as pd
+import seaborn
 
 
 def print_as_comment(obj):
@@ -18,6 +17,7 @@ if __name__ == "__main__":
     # ---
 
     import pandas as ep
+
     import epymetheus as ep
     from epymetheus.benchmarks import dumb_strategy
     from epymetheus.datasets import fetch_usstocks

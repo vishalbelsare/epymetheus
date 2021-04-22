@@ -1,10 +1,11 @@
-import pandas as pd
-from pandas.tseries.offsets import DateOffset
-from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn
+from pandas.plotting import register_matplotlib_converters
+from pandas.tseries.offsets import DateOffset
 
-from epymetheus import Trade, TradeStrategy
+from epymetheus import Trade
+from epymetheus import TradeStrategy
 from epymetheus.datasets import fetch_usstocks
 
 register_matplotlib_converters()

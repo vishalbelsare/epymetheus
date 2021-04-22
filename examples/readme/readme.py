@@ -15,8 +15,9 @@ if __name__ == "__main__":
 
     # ---
 
-    import epymetheus as ep
     import pandas as pd
+
+    import epymetheus as ep
     from epymetheus.benchmarks import dumb_strategy
 
     # ---
