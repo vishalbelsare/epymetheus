@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="Epymetheus" width="80%" src="https://user-images.githubusercontent.com/24503967/103449899-0a16e000-4cf2-11eb-9296-4cce96da9309.png">
+    <img alt="Epymetheus" width="80%" src="https://user-images.githubusercontent.com/24503967/116400235-c9287580-a864-11eb-8ee3-799b187f6e7f.png">
 </p>
 
 <h1 align="center">Epymetheus: Multi-asset Backtesting Framework</h1>
@@ -10,6 +10,10 @@
 [![codecov](https://codecov.io/gh/simaki/epymetheus/branch/main/graph/badge.svg)](https://codecov.io/gh/simaki/epymetheus)
 [![dl](https://img.shields.io/pypi/dm/epymetheus)](https://pypi.org/project/epymetheus)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+<p align="center">
+    <b>⚠️ This repository was moved to <a href="https://github.com/epymetheus/epymetheus">epymetheus/epymetheus</a>. ⚠️</b>
+</p>
 
 ![wealth](examples/readme/wealth.png)
 
